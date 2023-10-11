@@ -10,5 +10,8 @@ migratedown:
 sqlc:
 	sqlc generate
 
+mock:
+	mockgen -package mockdb -destination db/mock/store.go github.com/naderSameh/ticketing_support/db/sqlc Store
+
 .PHONY:
-	migrateup migratedown postgres sqlc
+	migrateup migratedown postgres sqlc mock

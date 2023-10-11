@@ -25,6 +25,6 @@ CREATE TABLE "comments" (
   "user_commented" varchar NOT NULL
 );
 
-ALTER TABLE "tickets" ADD FOREIGN KEY ("category_id") REFERENCES "categories" ("category_id");
+ALTER TABLE "tickets" ADD FOREIGN KEY ("category_id") REFERENCES "categories" ("category_id") ON DELETE CASCADE;;
 
-ALTER TABLE "comments" ADD FOREIGN KEY ("ticket_id") REFERENCES "tickets" ("ticket_id");
+ALTER TABLE "comments" ADD FOREIGN KEY ("ticket_id") REFERENCES "tickets" ("ticket_id") ON DELETE CASCADE;;

@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
@@ -158,18 +159,27 @@ func (q *Queries) ListTickets(ctx context.Context, arg ListTicketsParams) ([]Tic
 
 const updateTicket = `-- name: UpdateTicket :one
 UPDATE tickets
-SET updated_at = $2
+SET updated_at = $2,
+status = $3,
+assigned_to = $4
 WHERE ticket_id = $1
 RETURNING ticket_id, title, description, status, created_at, updated_at, closed_at, category_id, user_assigned, assigned_to
 `
 
 type UpdateTicketParams struct {
-	TicketID  int64     `json:"ticket_id"`
-	UpdatedAt time.Time `json:"updated_at"`
+	TicketID   int64          `json:"ticket_id"`
+	UpdatedAt  time.Time      `json:"updated_at"`
+	Status     string         `json:"status"`
+	AssignedTo sql.NullString `json:"assigned_to"`
 }
 
 func (q *Queries) UpdateTicket(ctx context.Context, arg UpdateTicketParams) (Ticket, error) {
-	row := q.db.QueryRowContext(ctx, updateTicket, arg.TicketID, arg.UpdatedAt)
+	row := q.db.QueryRowContext(ctx, updateTicket,
+		arg.TicketID,
+		arg.UpdatedAt,
+		arg.Status,
+		arg.AssignedTo,
+	)
 	var i Ticket
 	err := row.Scan(
 		&i.TicketID,

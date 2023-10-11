@@ -86,13 +86,18 @@ func TestUpdateTicket(t *testing.T) {
 	ticket1, err := createRandomTicket()
 
 	args := UpdateTicketParams{
-		TicketID:  ticket1.TicketID,
-		UpdatedAt: time.Now(),
+		TicketID:   ticket1.TicketID,
+		UpdatedAt:  time.Now(),
+		Status:     "closed",
+		AssignedTo: sql.NullString{String: "someone", Valid: true},
 	}
 
 	ticket, err := testQueries.UpdateTicket(context.Background(), args)
 	require.NoError(t, err)
 	require.WithinDuration(t, ticket.UpdatedAt, time.Now(), time.Second)
+	require.Equal(t, ticket.Status, args.Status)
+	require.Equal(t, ticket.AssignedTo.String, args.AssignedTo.String)
+	require.Equal(t, ticket.AssignedTo.Valid, args.AssignedTo.Valid)
 }
 
 func TestListTickets(t *testing.T) {

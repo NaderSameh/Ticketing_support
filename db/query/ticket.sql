@@ -28,7 +28,9 @@ OFFSET $3;
 
 -- name: UpdateTicket :one
 UPDATE tickets
-SET updated_at = $2
+SET updated_at = $2,
+status = $3,
+assigned_to = $4
 WHERE ticket_id = $1
 RETURNING *;
 
