@@ -13,5 +13,8 @@ sqlc:
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/naderSameh/ticketing_support/db/sqlc Store
 
+test:
+	go test -cover ./...
+
 .PHONY:
 	migrateup migratedown postgres sqlc mock
