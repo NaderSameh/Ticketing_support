@@ -16,8 +16,8 @@ jobs:
       postgres:
         image: postgres:14-alpine
         env:
-          POSTGRES_USER: root
-          POSTGRES_PASSWORD: secret
+          POSTGRES_USER: nader
+          POSTGRES_PASSWORD: nader123
           POSTGRES_DB: ticketing_support
         ports:
           - 5432:5432
