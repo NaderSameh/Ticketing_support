@@ -1,0 +1,26 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_SOURCE=postgresql://nader:nader123@postgres:5432/ticketing_support?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: [ "/app/start.sh" ]
+    command: [ "/app/main" ]
+
+  postgres:
+    image: postgres:alpine3.18
+    environment:
+      - POSTGRES_USER=nader
+      - POSTGRES_PASSWORD=nader123
+      - POSTGRES_DB=ticketing_support
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U nader -d ticketing_support" ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
