@@ -19,6 +19,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	JWTtokenOK             = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY5NzQ1MzYwNywianRpIjoiOWRkZWI4ZWEtNzI0YS00NGYyLWIxMDgtODEzZjFkY2RmNjIxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Ik1pbmEzIiwibmJmIjoxNjk3NDUzNjA3LCJleHAiOjE3OTc0NjQ0MDcsInBlcm1pc3Npb25zIjpbImFwaV92Mi5kZXZpY2VzLmFsbC1yZXF1ZXN0cy5HRVQiLCJhcGlfdjIuZGV2aWNlcy5yZXF1ZXN0cy5QVVQiLCJ0aWNrZXRzLlBPU1QiLCJ0aWNrZXRzLkdFVCIsInRpY2tldHMuUFVUIiwidGlja2V0cy5EZWxldGUiXX0.S-QPmsHobV0mdQ5CyBlfV0nT2-nMMmveTJwM9y5VeTA"
+	JWTtokenNoPermission   = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY5NzQ1MzYwNywianRpIjoiOWRkZWI4ZWEtNzI0YS00NGYyLWIxMDgtODEzZjFkY2RmNjIxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Ik1pbmEzIiwibmJmIjoxNjk3NDUzNjA3LCJleHAiOjE4OTc0NjQ0MDcsInBlcm1pc3Npb25zIjpbImFwaV92Mi5kZXZpY2VzLmFsbC1yZXF1ZXN0cy5HRVQiLCJhcGlfdjIuZGV2aWNlcy5yZXF1ZXN0cy5QVVQiLCJ0aWNrZXRzLkdFVCIsInRpY2tldHMuRGVsZXRlIl19.5mAV8Ym0BBioNdk8cGrSs8E5fPweCNKZ3csywlgzN7c"
+	JWTtokenExpiration     = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY5NzQ1MzYwNywianRpIjoiOWRkZWI4ZWEtNzI0YS00NGYyLWIxMDgtODEzZjFkY2RmNjIxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Ik1pbmEzIiwibmJmIjoxNjk3NDUzNjA3LCJleHAiOjE2OTc0NjQ0MDcsInBlcm1pc3Npb25zIjpbImFwaV92Mi5kZXZpY2VzLmFsbC1yZXF1ZXN0cy5HRVQiLCJhcGlfdjIuZGV2aWNlcy5yZXF1ZXN0cy5QVVQiLCJ0aWNrZXRzLlBPU1QiLCJ0aWNrZXRzLkdFVCIsInRpY2tldHMuUFVUIiwidGlja2V0cy5EZWxldGUiXX0._eu-oeHopfpSfSa0HZJyl5oxuCw6Q_h8O8mlmn2ascc"
+	JWTtokenInvalid        = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY5NzQ1MzYwNywianRpIjoiOWRkZWI4ZWEtNzI0YS00NGYyLWIxMDgtODEzZjFkY2RmNjIxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Ik1pbmEzIiwibmJmIjoxNjk3NDUzNjA3LCJleHAiOjE2OTc0NjQ0MDcsInBlcm1pc3Npb25zIjpbImFwaV92Mi5kZXZpY2VzLmFsbC1yZXF1ZXN0cy5HRVQiLCJhcGlfdjIuZGV2aWNlcy5yZXF1ZXN0cy5QVVQiLCJ0aWNrZXRzLkdFVCIsInRpY2tldHMuRGVsZXRlIl19.dQsLRbYndv_vT3N89sYMVcv3Hs5xrgR5BolVj4O1D4A"
+	JWTtokenInvalidAlg     = "eyJ0eXAiOiJKV1QiLCJhbGciOiJQUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY5NzQ1MzYwNywianRpIjoiOWRkZWI4ZWEtNzI0YS00NGYyLWIxMDgtODEzZjFkY2RmNjIxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Ik1pbmEzIiwibmJmIjoxNjk3NDUzNjA3LCJleHAiOjE2OTc0NjQ0MDcsInBlcm1pc3Npb25zIjpbImFwaV92Mi5kZXZpY2VzLmFsbC1yZXF1ZXN0cy5HRVQiLCJhcGlfdjIuZGV2aWNlcy5yZXF1ZXN0cy5QVVQiLCJ0aWNrZXRzLkdFVCIsInRpY2tldHMuRGVsZXRlIl19.wnAfwYO-yXDR9YXd_TmbV-Xo9PO73G-6fccVAXAj9Lff7zW6183vLDNidoy44bmAzJwJdtQoX-GIlbP2fbD5vFpZxaRbztGh7CpoIUarT4x7IbhUTKzsJfY-YQqU_NDtitpeWTNHHTZJnl6nTJw0Qj1iHDz5p3OxjKxohpkWJ7fKSDvwqgKLxpLhJN3cvt7J6GePfILaPvHv80pw1zW5dhB3MmvD-H8smrmy2iawh9j-m6NtxaTXmBVIIdDBUiatz_vglDbuFZkOHiCtb73_sYECA9ng8YOCNCFYU7sxlLPsk55STSBbFIp3xeUJNC3HiYuc_mouWvPYwPe6XoyA4w"
+	JWTtokenInvalidPayload = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVkd3NoIjp0cnVlLCJwZXJtZHdhZGFpc3Npb25zZGF3ZGFkIjpbXX0.gh42XKd8BRdASNqD7-LzH4HMB0NmicyJPprgu0PB97s"
+)
+
 func createRandomCategory() db.Category {
 	return db.Category{
 		CategoryID: rand.Int63n(100),
@@ -427,12 +436,17 @@ func TestUpdateTicket(t *testing.T) {
 		name          string
 		body          gin.H
 		TicketID      int64
+		setupAuth     func(t *testing.T, request *http.Request)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(recoder *httptest.ResponseRecorder)
 	}{
 		{
 			name:     "OK",
 			TicketID: ticket.TicketID,
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+				fmt.Printf("hamada %s", request.Header.Get(authorizationHeaderKey))
+			},
 			body: gin.H{
 				"ticket_id":   ticket.TicketID,
 				"status":      "closed",
@@ -461,9 +475,101 @@ func TestUpdateTicket(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
-		}, {
+		},
+		{
+			name:     "OK",
+			TicketID: ticket.TicketID,
+			setupAuth: func(t *testing.T, request *http.Request) {
+				// addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
+			body: gin.H{
+				"ticket_id":   ticket.TicketID,
+				"status":      "closed",
+				"assigned_to": "someone",
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name:     "Unauthorized no permission",
+			TicketID: ticket.TicketID,
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenNoPermission, authorizationTypeBearer)
+			},
+			body: gin.H{
+				"ticket_id":   ticket.TicketID,
+				"status":      "closed",
+				"assigned_to": "someone",
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.UpdateTicketParams{
+					TicketID:   ticket.TicketID,
+					UpdatedAt:  time.Now().Round(time.Second),
+					Status:     "closed",
+					AssignedTo: sql.NullString{String: "someone", Valid: true},
+				}
+				ticket.UpdatedAt = time.Now()
+				ticket.Status = "closed"
+
+				store.EXPECT().
+					GetTicketForUpdate(gomock.Any(), ticket.TicketID).
+					Times(0).
+					Return(ticket, nil)
+
+				store.EXPECT().
+					UpdateTicket(gomock.Any(), gomock.Eq(arg)).
+					Times(0).
+					Return(ticket, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name:     "Unauthorized expired token",
+			TicketID: ticket.TicketID,
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenExpiration, authorizationTypeBearer)
+			},
+			body: gin.H{
+				"ticket_id":   ticket.TicketID,
+				"status":      "closed",
+				"assigned_to": "someone",
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.UpdateTicketParams{
+					TicketID:   ticket.TicketID,
+					UpdatedAt:  time.Now().Round(time.Second),
+					Status:     "closed",
+					AssignedTo: sql.NullString{String: "someone", Valid: true},
+				}
+				ticket.UpdatedAt = time.Now()
+				ticket.Status = "closed"
+
+				store.EXPECT().
+					GetTicketForUpdate(gomock.Any(), ticket.TicketID).
+					Times(0).
+					Return(ticket, nil)
+
+				store.EXPECT().
+					UpdateTicket(gomock.Any(), gomock.Eq(arg)).
+					Times(0).
+					Return(ticket, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
 			name:     "missing data",
 			TicketID: ticket.TicketID,
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
 			body: gin.H{
 				"ticket_id": ticket.TicketID,
 				// "status":      "closed",
@@ -484,6 +590,9 @@ func TestUpdateTicket(t *testing.T) {
 				"status":      "finished",
 				"assigned_to": "someone",
 			},
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					UpdateTicket(gomock.Any(), gomock.Any()).
@@ -496,6 +605,9 @@ func TestUpdateTicket(t *testing.T) {
 		{
 			name:     "Internal server error",
 			TicketID: ticket.TicketID,
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
 			body: gin.H{
 				"ticket_id":   ticket.TicketID,
 				"status":      "closed",
@@ -529,6 +641,9 @@ func TestUpdateTicket(t *testing.T) {
 		{
 			name:     "Empty assigned to field",
 			TicketID: ticket.TicketID,
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
 			body: gin.H{
 				"ticket_id": ticket.TicketID,
 				"status":    "closed",
@@ -559,6 +674,9 @@ func TestUpdateTicket(t *testing.T) {
 		}, {
 			name:     "Not an existing ticket",
 			TicketID: ticket.TicketID,
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
 			body: gin.H{
 				"ticket_id": ticket.TicketID,
 				"status":    "closed",
@@ -610,7 +728,10 @@ func TestUpdateTicket(t *testing.T) {
 			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 
+			tc.setupAuth(t, request)
+
 			server.router.ServeHTTP(recorder, request)
+			fmt.Printf("error %s", recorder.Body.String())
 			tc.checkResponse(recorder)
 		})
 	}

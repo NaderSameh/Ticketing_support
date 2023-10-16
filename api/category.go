@@ -25,6 +25,7 @@ type createCategorytRequest struct {
 //
 //	@Success		200	{object}	db.Category
 //	@Failure		400	{object}	error
+//	@Failure		401	{object}	error
 //	@Failure		500	{object}	error
 //	@Security		ApiKeyAuth
 //	@Router			/categories [post]

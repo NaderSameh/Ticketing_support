@@ -165,6 +165,7 @@ type updateTicketRequestURI struct {
 //
 //	@Success		200			{object}	db.Ticket
 //	@Failure		400			{object}	error
+//	@Failure		401			{object}	error
 //	@Failure		404			{object}	error
 //	@Failure		500			{object}	error
 //	@Router			/tickets/{ticket_id} [put]
@@ -182,7 +183,7 @@ func (server *Server) updateTicket(c *gin.Context) {
 	}
 
 	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
-	if slices.Contains(authPayload.Permissions, "tickets.PUT") {
+	if !slices.Contains(authPayload.Permissions, "tickets.PUT") {
 		err := errors.New("Only admins update tickets")
 		c.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
