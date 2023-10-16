@@ -3,6 +3,9 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
+	_ "github.com/naderSameh/ticketing_support/docs"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Server struct {
@@ -27,7 +30,7 @@ func (server *Server) setupRouter() {
 	router.POST("/tickets", server.createTicket)              // Create new ticket
 	router.DELETE("/tickets/:ticket_id", server.deleteTicket) // Delete ticket with its comments
 	router.GET("/tickets", server.listTicket)                 // Get list of tickets
-	router.PUT("/tickets", server.updateTicket)               //Assign ticket or update its status
+	router.PUT("/tickets/:ticket_id", server.updateTicket)    //Assign ticket or update its status
 	//comments
 	router.DELETE("/tickets/:ticket_id/comments/:comment_id", server.deleteComment) // Delete a comment
 	router.PUT("/tickets/:ticket_id/comments/:comment_id", server.updateComment)    //Edit comment text
@@ -36,6 +39,9 @@ func (server *Server) setupRouter() {
 	//caterogries
 	router.POST("/categories", server.createCategory) // Create Category
 	router.GET("/categories", server.listCategories)  // Create Category
+	//Swagger
+	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json") // The url pointing to API definition
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	server.router = router
 }

@@ -18,6 +18,20 @@ type createCommentRequestURI struct {
 	TicketID int64 `uri:"ticket_id" binding:"required,min=1"`
 }
 
+// CreateComment godoc
+//
+//	@Summary		Add comment
+//	@Description	Add a new comment to a ticket
+//	@Tags			Comments
+//	@Produce		json
+//	@Accept			json
+//	@Param			arg			body		createCommentRequestJSON	true	"Create comment body"
+//	@Param			ticket_id	path		int							true	"Ticket ID"
+//
+//	@Success		200			{object}	db.Comment
+//	@Failure		400			{object}	error
+//	@Failure		500			{object}	error
+//	@Router			/tickets/{ticket_id}/comments [post]
 func (server *Server) createComment(c *gin.Context) {
 	var reqJSON createCommentRequestJSON
 	var reqURI createCommentRequestURI
@@ -48,6 +62,19 @@ type deleteCommentRequest struct {
 	CommentID int64 `uri:"comment_id" binding:"required,min=0"`
 }
 
+// DeleteComment godoc
+//
+//	@Summary		Delete comment
+//	@Description	Delete a comment from a ticket
+//	@Tags			Comments
+//	@Produce		plain
+//	@Param			comment_id	path		int	true	"Comment ID"
+//
+//	@Success		200			true		bool
+//	@Failure		400			{object}	error
+//	@Failure		404			{object}	error
+//	@Failure		500			{object}	error
+//	@Router			/tickets/{ticket_id}/comments/{comment_id} [delete]
 func (server *Server) deleteComment(c *gin.Context) {
 	var req deleteCommentRequest
 
@@ -78,6 +105,24 @@ type updateCommentRequestJSON struct {
 	CommentText string `json:"comment_text" binding:"required,min=0"`
 }
 
+// UpdateComment godoc
+//
+//	@Summary		Update comment
+//	@Description	Update a comment from a ticket
+//	@Tags			Comments
+//
+//	@Accept			json
+//
+//	@Produce		json
+//	@Param			comment_id	path		int							true	"Comment ID"
+//	@Param			ticket_id	path		int							true	"Ticket ID"
+//	@Param			arg			body		updateCommentRequestJSON	true	"Comment text"
+//
+//	@Success		200			{object}	db.Comment
+//	@Failure		400			{object}	error
+//	@Failure		404			{object}	error
+//	@Failure		500			{object}	error
+//	@Router			/tickets/{ticket_id}/comments/{comment_id} [put]
 func (server *Server) updateComment(c *gin.Context) {
 	var reqJSON updateCommentRequestJSON
 	var reqURI updateCommentRequestURI
@@ -135,6 +180,23 @@ type listCommentsRequestQuery struct {
 	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
 }
 
+// ListComments godoc
+//
+//	@Summary		List comments
+//	@Description	List all comments from a ticket
+//	@Tags			Comments
+//
+//
+//	@Produce		json
+//	@Param			ticket_id	path		int	true	"Ticket ID"
+//	@Param			page_id		query		int	true	"Page ID"
+//	@Param			page_size	query		int	true	"Page Size"
+//
+//	@Success		200			{array}		db.Comment
+//	@Failure		400			{object}	error
+//	@Failure		404			{object}	error
+//	@Failure		500			{object}	error
+//	@Router			/tickets/{ticket_id}/comments [get]
 func (server *Server) listComments(c *gin.Context) {
 	var reqQ listCommentsRequestQuery
 	var reqURI listCommentsRequestURI

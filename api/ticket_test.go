@@ -426,11 +426,13 @@ func TestUpdateTicket(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          gin.H
+		TicketID      int64
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(recoder *httptest.ResponseRecorder)
 	}{
 		{
-			name: "OK",
+			name:     "OK",
+			TicketID: ticket.TicketID,
 			body: gin.H{
 				"ticket_id":   ticket.TicketID,
 				"status":      "closed",
@@ -447,6 +449,11 @@ func TestUpdateTicket(t *testing.T) {
 				ticket.Status = "closed"
 
 				store.EXPECT().
+					GetTicketForUpdate(gomock.Any(), ticket.TicketID).
+					Times(1).
+					Return(ticket, nil)
+
+				store.EXPECT().
 					UpdateTicket(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(ticket, nil)
@@ -455,7 +462,8 @@ func TestUpdateTicket(t *testing.T) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		}, {
-			name: "missing data",
+			name:     "missing data",
+			TicketID: ticket.TicketID,
 			body: gin.H{
 				"ticket_id": ticket.TicketID,
 				// "status":      "closed",
@@ -486,7 +494,8 @@ func TestUpdateTicket(t *testing.T) {
 			},
 		},
 		{
-			name: "Internal server error",
+			name:     "Internal server error",
+			TicketID: ticket.TicketID,
 			body: gin.H{
 				"ticket_id":   ticket.TicketID,
 				"status":      "closed",
@@ -503,6 +512,11 @@ func TestUpdateTicket(t *testing.T) {
 				ticket.Status = "closed"
 
 				store.EXPECT().
+					GetTicketForUpdate(gomock.Any(), ticket.TicketID).
+					Times(1).
+					Return(ticket, nil)
+
+				store.EXPECT().
 					UpdateTicket(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(ticket, sql.ErrConnDone)
@@ -513,7 +527,8 @@ func TestUpdateTicket(t *testing.T) {
 		},
 
 		{
-			name: "Empty assigned to field",
+			name:     "Empty assigned to field",
+			TicketID: ticket.TicketID,
 			body: gin.H{
 				"ticket_id": ticket.TicketID,
 				"status":    "closed",
@@ -529,12 +544,47 @@ func TestUpdateTicket(t *testing.T) {
 				ticket.Status = "closed"
 
 				store.EXPECT().
+					GetTicketForUpdate(gomock.Any(), ticket.TicketID).
+					Times(1).
+					Return(ticket, nil)
+
+				store.EXPECT().
 					UpdateTicket(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(ticket, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		}, {
+			name:     "Not an existing ticket",
+			TicketID: ticket.TicketID,
+			body: gin.H{
+				"ticket_id": ticket.TicketID,
+				"status":    "closed",
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.UpdateTicketParams{
+					TicketID:   ticket.TicketID,
+					UpdatedAt:  time.Now().Round(time.Second),
+					Status:     "closed",
+					AssignedTo: sql.NullString{String: "", Valid: false},
+				}
+				ticket.UpdatedAt = time.Now()
+				ticket.Status = "closed"
+
+				store.EXPECT().
+					GetTicketForUpdate(gomock.Any(), ticket.TicketID).
+					Times(1).
+					Return(ticket, sql.ErrNoRows)
+
+				store.EXPECT().
+					UpdateTicket(gomock.Any(), gomock.Eq(arg)).
+					Times(0).
+					Return(ticket, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusNotFound, recorder.Code)
 			},
 		},
 	}
@@ -556,7 +606,7 @@ func TestUpdateTicket(t *testing.T) {
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)
 
-			url := "/tickets"
+			url := fmt.Sprintf("/tickets/%d", tc.TicketID)
 			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
 

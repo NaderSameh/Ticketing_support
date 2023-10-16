@@ -11,6 +11,21 @@ import (
 	"github.com/spf13/viper"
 )
 
+//	@title			Gin Swagger Example API
+//	@version		1.0
+//	@description	Ticketing support microservice
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	Cypodsolutions
+//	@contact.url	http://www.cypod.com/
+//	@contact.email	naders@cypodsolutions.com
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host		localhost:8080
+// @BasePath	/
+// @schemes	http
 func main() {
 
 	err := util.Loadconfig(".")

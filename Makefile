@@ -16,5 +16,8 @@ mock:
 test:
 	go test -cover ./...
 
+swag:
+	swag init --parseDependency  --parseInternal -g main.go
+
 .PHONY:
-	migrateup migratedown postgres sqlc mock
+	migrateup migratedown postgres sqlc mock swag
