@@ -2,11 +2,14 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
+	"github.com/naderSameh/ticketing_support/token"
+	"golang.org/x/exp/slices"
 )
 
 type createTicketRequest struct {
@@ -175,6 +178,13 @@ func (server *Server) updateTicket(c *gin.Context) {
 
 	if err := c.ShouldBindUri(&reqURI); err != nil {
 		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+	if slices.Contains(authPayload.Permissions, "tickets.PUT") {
+		err := errors.New("Only admins update tickets")
+		c.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 

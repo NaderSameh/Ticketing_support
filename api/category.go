@@ -1,10 +1,13 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
+	"github.com/naderSameh/ticketing_support/token"
+	"golang.org/x/exp/slices"
 )
 
 type createCategorytRequest struct {
@@ -23,6 +26,7 @@ type createCategorytRequest struct {
 //	@Success		200	{object}	db.Category
 //	@Failure		400	{object}	error
 //	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
 //	@Router			/categories [post]
 func (server *Server) createCategory(c *gin.Context) {
 	var req createCategorytRequest
@@ -30,7 +34,12 @@ func (server *Server) createCategory(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+	if !slices.Contains(authPayload.Permissions, "tickets.POST") {
+		err := errors.New("Only admins post new categories")
+		c.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
 	category, err := server.store.CreateCategory(c, req.Name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))

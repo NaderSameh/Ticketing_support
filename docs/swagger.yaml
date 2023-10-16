@@ -193,6 +193,8 @@ paths:
         "500":
           description: Internal Server Error
           schema: {}
+      security:
+      - ApiKeyAuth: []
       summary: Create new category
       tags:
       - Categories
@@ -465,4 +467,10 @@ paths:
       - Comments
 schemes:
 - http
+securityDefinitions:
+  ApiKeyAuth:
+    description: Description for what is this security definition being used
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
