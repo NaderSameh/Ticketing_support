@@ -182,6 +182,21 @@ func (mr *MockStoreMockRecorder) GetTicketForUpdate(arg0, arg1 interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTicketForUpdate", reflect.TypeOf((*MockStore)(nil).GetTicketForUpdate), arg0, arg1)
 }
 
+// ListAllTickets mocks base method.
+func (m *MockStore) ListAllTickets(arg0 context.Context, arg1 db.ListAllTicketsParams) ([]db.Ticket, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAllTickets", arg0, arg1)
+	ret0, _ := ret[0].([]db.Ticket)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAllTickets indicates an expected call of ListAllTickets.
+func (mr *MockStoreMockRecorder) ListAllTickets(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllTickets", reflect.TypeOf((*MockStore)(nil).ListAllTickets), arg0, arg1)
+}
+
 // ListCategories mocks base method.
 func (m *MockStore) ListCategories(arg0 context.Context, arg1 db.ListCategoriesParams) ([]db.Category, error) {
 	m.ctrl.T.Helper()

@@ -21,7 +21,7 @@ import (
 
 const (
 	JWTtokenOK             = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY5NzQ1MzYwNywianRpIjoiOWRkZWI4ZWEtNzI0YS00NGYyLWIxMDgtODEzZjFkY2RmNjIxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Ik1pbmEzIiwibmJmIjoxNjk3NDUzNjA3LCJleHAiOjE3OTc0NjQ0MDcsInBlcm1pc3Npb25zIjpbImFwaV92Mi5kZXZpY2VzLmFsbC1yZXF1ZXN0cy5HRVQiLCJhcGlfdjIuZGV2aWNlcy5yZXF1ZXN0cy5QVVQiLCJ0aWNrZXRzLlBPU1QiLCJ0aWNrZXRzLkdFVCIsInRpY2tldHMuUFVUIiwidGlja2V0cy5EZWxldGUiXX0.S-QPmsHobV0mdQ5CyBlfV0nT2-nMMmveTJwM9y5VeTA"
-	JWTtokenNoPermission   = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY5NzQ1MzYwNywianRpIjoiOWRkZWI4ZWEtNzI0YS00NGYyLWIxMDgtODEzZjFkY2RmNjIxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Ik1pbmEzIiwibmJmIjoxNjk3NDUzNjA3LCJleHAiOjE4OTc0NjQ0MDcsInBlcm1pc3Npb25zIjpbImFwaV92Mi5kZXZpY2VzLmFsbC1yZXF1ZXN0cy5HRVQiLCJhcGlfdjIuZGV2aWNlcy5yZXF1ZXN0cy5QVVQiLCJ0aWNrZXRzLkdFVCIsInRpY2tldHMuRGVsZXRlIl19.5mAV8Ym0BBioNdk8cGrSs8E5fPweCNKZ3csywlgzN7c"
+	JWTtokenNoPermission   = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY5NzQ1MzYwNywianRpIjoiOWRkZWI4ZWEtNzI0YS00NGYyLWIxMDgtODEzZjFkY2RmNjIxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Ik1pbmEzIiwibmJmIjoxNjk3NDUzNjA3LCJleHAiOjE4OTc0NjQ0MDcsInBlcm1pc3Npb25zIjpbImFwaV92Mi5kZXZpY2VzLmFsbC1yZXF1ZXN0cy5HRVQiLCJhcGlfdjIuZGV2aWNlcy5yZXF1ZXN0cy5QVVQiLCJ0aWNrZXRzLkRlbGV0ZSJdfQ.DGWKf-xPlo4tJKj60sxdhcQxgvAVymvaUpA_wQfUZS8"
 	JWTtokenExpiration     = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY5NzQ1MzYwNywianRpIjoiOWRkZWI4ZWEtNzI0YS00NGYyLWIxMDgtODEzZjFkY2RmNjIxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Ik1pbmEzIiwibmJmIjoxNjk3NDUzNjA3LCJleHAiOjE2OTc0NjQ0MDcsInBlcm1pc3Npb25zIjpbImFwaV92Mi5kZXZpY2VzLmFsbC1yZXF1ZXN0cy5HRVQiLCJhcGlfdjIuZGV2aWNlcy5yZXF1ZXN0cy5QVVQiLCJ0aWNrZXRzLlBPU1QiLCJ0aWNrZXRzLkdFVCIsInRpY2tldHMuUFVUIiwidGlja2V0cy5EZWxldGUiXX0._eu-oeHopfpSfSa0HZJyl5oxuCw6Q_h8O8mlmn2ascc"
 	JWTtokenInvalid        = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY5NzQ1MzYwNywianRpIjoiOWRkZWI4ZWEtNzI0YS00NGYyLWIxMDgtODEzZjFkY2RmNjIxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Ik1pbmEzIiwibmJmIjoxNjk3NDUzNjA3LCJleHAiOjE2OTc0NjQ0MDcsInBlcm1pc3Npb25zIjpbImFwaV92Mi5kZXZpY2VzLmFsbC1yZXF1ZXN0cy5HRVQiLCJhcGlfdjIuZGV2aWNlcy5yZXF1ZXN0cy5QVVQiLCJ0aWNrZXRzLkdFVCIsInRpY2tldHMuRGVsZXRlIl19.dQsLRbYndv_vT3N89sYMVcv3Hs5xrgR5BolVj4O1D4A"
 	JWTtokenInvalidAlg     = "eyJ0eXAiOiJKV1QiLCJhbGciOiJQUzI1NiJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTY5NzQ1MzYwNywianRpIjoiOWRkZWI4ZWEtNzI0YS00NGYyLWIxMDgtODEzZjFkY2RmNjIxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6Ik1pbmEzIiwibmJmIjoxNjk3NDUzNjA3LCJleHAiOjE2OTc0NjQ0MDcsInBlcm1pc3Npb25zIjpbImFwaV92Mi5kZXZpY2VzLmFsbC1yZXF1ZXN0cy5HRVQiLCJhcGlfdjIuZGV2aWNlcy5yZXF1ZXN0cy5QVVQiLCJ0aWNrZXRzLkdFVCIsInRpY2tldHMuRGVsZXRlIl19.wnAfwYO-yXDR9YXd_TmbV-Xo9PO73G-6fccVAXAj9Lff7zW6183vLDNidoy44bmAzJwJdtQoX-GIlbP2fbD5vFpZxaRbztGh7CpoIUarT4x7IbhUTKzsJfY-YQqU_NDtitpeWTNHHTZJnl6nTJw0Qj1iHDz5p3OxjKxohpkWJ7fKSDvwqgKLxpLhJN3cvt7J6GePfILaPvHv80pw1zW5dhB3MmvD-H8smrmy2iawh9j-m6NtxaTXmBVIIdDBUiatz_vglDbuFZkOHiCtb73_sYECA9ng8YOCNCFYU7sxlLPsk55STSBbFIp3xeUJNC3HiYuc_mouWvPYwPe6XoyA4w"
@@ -297,15 +297,44 @@ func TestListTicket(t *testing.T) {
 	testCases := []struct {
 		name          string
 		query         Query
+		setupAuth     func(t *testing.T, request *http.Request)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(recoder *httptest.ResponseRecorder)
 	}{
 		{
-			name: "OK",
+			name: "OK admin",
 			query: Query{
 				user_assigned: tickets[0].UserAssigned,
 				page_id:       1,
 				page_size:     10,
+			},
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				arg := db.ListAllTicketsParams{
+					Limit:  10,
+					Offset: 0,
+				}
+
+				store.EXPECT().
+					ListAllTickets(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(tickets, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name: "OK user",
+			query: Query{
+				user_assigned: tickets[0].UserAssigned,
+				page_id:       1,
+				page_size:     10,
+			},
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenNoPermission, authorizationTypeBearer)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.ListTicketsParams{
@@ -330,6 +359,9 @@ func TestListTicket(t *testing.T) {
 				// "page_id":       1,
 				// "page_size":     10,
 			},
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.ListTicketsParams{
 					UserAssigned: tickets[0].UserAssigned,
@@ -352,6 +384,9 @@ func TestListTicket(t *testing.T) {
 				page_id:       1,
 				page_size:     100,
 			},
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					ListTickets(gomock.Any(), gomock.Any()).
@@ -367,6 +402,9 @@ func TestListTicket(t *testing.T) {
 				page_id:       -1,
 				page_size:     10,
 			},
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					ListTickets(gomock.Any(), gomock.Any()).
@@ -378,11 +416,33 @@ func TestListTicket(t *testing.T) {
 		},
 
 		{
-			name: "internal server error",
+			name: "internal server error admin",
 			query: Query{
 				user_assigned: tickets[0].UserAssigned,
 				page_id:       1,
 				page_size:     10,
+			},
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListAllTickets(gomock.Any(), gomock.Any()).
+					Times(1).Return(tickets, sql.ErrConnDone)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name: "internal server error user",
+			query: Query{
+				user_assigned: tickets[0].UserAssigned,
+				page_id:       1,
+				page_size:     10,
+			},
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenNoPermission, authorizationTypeBearer)
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -422,7 +482,7 @@ func TestListTicket(t *testing.T) {
 			q.Add("page_id", fmt.Sprintf("%d", tc.query.page_id))
 			q.Add("page_size", fmt.Sprintf("%d", tc.query.page_size))
 			request.URL.RawQuery = q.Encode()
-
+			tc.setupAuth(t, request)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
@@ -445,7 +505,6 @@ func TestUpdateTicket(t *testing.T) {
 			TicketID: ticket.TicketID,
 			setupAuth: func(t *testing.T, request *http.Request) {
 				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-				fmt.Printf("hamada %s", request.Header.Get(authorizationHeaderKey))
 			},
 			body: gin.H{
 				"ticket_id":   ticket.TicketID,
@@ -477,7 +536,7 @@ func TestUpdateTicket(t *testing.T) {
 			},
 		},
 		{
-			name:     "OK",
+			name:     "No authorization",
 			TicketID: ticket.TicketID,
 			setupAuth: func(t *testing.T, request *http.Request) {
 				// addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
@@ -530,38 +589,21 @@ func TestUpdateTicket(t *testing.T) {
 			},
 		},
 		{
-			name:     "Unauthorized expired token",
-			TicketID: ticket.TicketID,
+			name:     "Invalid URI ticket ID",
+			TicketID: -ticket.TicketID,
 			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenExpiration, authorizationTypeBearer)
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
 			},
 			body: gin.H{
-				"ticket_id":   ticket.TicketID,
+				"ticket_id":   -ticket.TicketID,
 				"status":      "closed",
 				"assigned_to": "someone",
 			},
 			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateTicketParams{
-					TicketID:   ticket.TicketID,
-					UpdatedAt:  time.Now().Round(time.Second),
-					Status:     "closed",
-					AssignedTo: sql.NullString{String: "someone", Valid: true},
-				}
-				ticket.UpdatedAt = time.Now()
-				ticket.Status = "closed"
 
-				store.EXPECT().
-					GetTicketForUpdate(gomock.Any(), ticket.TicketID).
-					Times(0).
-					Return(ticket, nil)
-
-				store.EXPECT().
-					UpdateTicket(gomock.Any(), gomock.Eq(arg)).
-					Times(0).
-					Return(ticket, nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
 		{

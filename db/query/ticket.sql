@@ -26,6 +26,15 @@ LIMIT $2
 OFFSET $3;
 
 
+
+-- name: ListAllTickets :many
+SELECT * FROM tickets
+ORDER BY ticket_id
+LIMIT $1
+OFFSET $2;
+
+
+
 -- name: UpdateTicket :one
 UPDATE tickets
 SET updated_at = $2,

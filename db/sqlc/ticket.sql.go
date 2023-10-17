@@ -109,6 +109,52 @@ func (q *Queries) GetTicketForUpdate(ctx context.Context, ticketID int64) (Ticke
 	return i, err
 }
 
+const listAllTickets = `-- name: ListAllTickets :many
+SELECT ticket_id, title, description, status, created_at, updated_at, closed_at, category_id, user_assigned, assigned_to FROM tickets
+ORDER BY ticket_id
+LIMIT $1
+OFFSET $2
+`
+
+type ListAllTicketsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListAllTickets(ctx context.Context, arg ListAllTicketsParams) ([]Ticket, error) {
+	rows, err := q.db.QueryContext(ctx, listAllTickets, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Ticket{}
+	for rows.Next() {
+		var i Ticket
+		if err := rows.Scan(
+			&i.TicketID,
+			&i.Title,
+			&i.Description,
+			&i.Status,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ClosedAt,
+			&i.CategoryID,
+			&i.UserAssigned,
+			&i.AssignedTo,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTickets = `-- name: ListTickets :many
 SELECT ticket_id, title, description, status, created_at, updated_at, closed_at, category_id, user_assigned, assigned_to FROM tickets
 WHERE user_assigned = $1

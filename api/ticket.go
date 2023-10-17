@@ -132,6 +132,21 @@ func (server *Server) listTicket(c *gin.Context) {
 		Offset:       (req.PageID - 1) * req.PageSize,
 	}
 
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+	if slices.Contains(authPayload.Permissions, "tickets.GET") {
+		arg2 := db.ListAllTicketsParams{
+			Limit:  req.PageSize,
+			Offset: (req.PageID - 1) * req.PageSize,
+		}
+		tickets, err := server.store.ListAllTickets(c, arg2)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		c.JSON(http.StatusOK, tickets)
+		return
+	}
+
 	tickets, err := server.store.ListTickets(c, arg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))

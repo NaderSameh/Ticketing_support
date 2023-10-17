@@ -29,7 +29,6 @@ func (server *Server) setupRouter() {
 	//tickets
 	router.POST("/tickets", server.createTicket)              // Create new ticket
 	router.DELETE("/tickets/:ticket_id", server.deleteTicket) // Delete ticket with its comments
-	router.GET("/tickets", server.listTicket)                 // Get list of tickets
 	//comments
 	router.DELETE("/tickets/:ticket_id/comments/:comment_id", server.deleteComment) // Delete a comment
 	router.PUT("/tickets/:ticket_id/comments/:comment_id", server.updateComment)    //Edit comment text
@@ -42,6 +41,7 @@ func (server *Server) setupRouter() {
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	authRoutes := router.Group("/").Use(authMiddleware())
+	authRoutes.GET("/tickets", server.listTicket)              // Get list of tickets
 	authRoutes.POST("/categories", server.createCategory)      // Create Category
 	authRoutes.PUT("/tickets/:ticket_id", server.updateTicket) //Assign ticket or update its status
 

@@ -104,6 +104,7 @@ func TestListTickets(t *testing.T) {
 	var lastTicket Ticket
 	for i := 0; i < 10; i++ {
 		lastTicket, _ = createRandomTicket()
+		createRandomTicket()
 	}
 
 	args := ListTicketsParams{
@@ -115,4 +116,20 @@ func TestListTickets(t *testing.T) {
 	tickets, err := testQueries.ListTickets(context.Background(), args)
 	require.NoError(t, err)
 	require.NotEmpty(t, tickets)
+}
+
+func TestListAllTickets(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		createRandomTicket()
+	}
+
+	args := ListAllTicketsParams{
+		Limit:  10,
+		Offset: 0,
+	}
+
+	tickets, err := testQueries.ListAllTickets(context.Background(), args)
+	require.NoError(t, err)
+	require.NotEmpty(t, tickets)
+	require.Len(t, tickets, 10)
 }
