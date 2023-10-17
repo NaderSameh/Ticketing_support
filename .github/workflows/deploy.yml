@@ -21,8 +21,8 @@ jobs:
         DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASS: ${{ secrets.DOCKER_PASSWORD }}
       run: |
-        docker login -U $DOCKER_USER -p $DOCKER_PASS
-        
+        docker login -u $DOCKER_USER -p $DOCKER_PASS
+
     - name: Build, tag, and push image to Amazon ECR
       env:
         REPOSITORY: nadersameh8/ticketing_support
