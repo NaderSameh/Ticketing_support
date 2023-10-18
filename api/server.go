@@ -1,12 +1,12 @@
 package api
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
 	_ "github.com/naderSameh/ticketing_support/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	import "github.com/gin-contrib/cors"
 )
 
 type Server struct {
@@ -32,9 +32,8 @@ func (server *Server) setupRouter() {
 	// config.AllowOrigins = []string{"http://google.com", "http://facebook.com"}
 	config.AllowOrigins = []string{"*"}
 	config.AllowAllOrigins = true
-  
-	router.Use(cors.New(config))
 
+	router.Use(cors.New(config))
 
 	//tickets
 	router.POST("/tickets", server.createTicket)              // Create new ticket
