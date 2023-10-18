@@ -6,6 +6,7 @@ import (
 	_ "github.com/naderSameh/ticketing_support/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	import "github.com/gin-contrib/cors"
 )
 
 type Server struct {
@@ -25,6 +26,15 @@ func NewServer(store db.Store) (*Server, error) {
 
 func (server *Server) setupRouter() {
 	router := gin.Default()
+
+	config := cors.DefaultConfig()
+	// config.AllowOrigins = []string{"http://google.com"}
+	// config.AllowOrigins = []string{"http://google.com", "http://facebook.com"}
+	config.AllowOrigins = []string{"*"}
+	config.AllowAllOrigins = true
+  
+	router.Use(cors.New(config))
+
 
 	//tickets
 	router.POST("/tickets", server.createTicket)              // Create new ticket
