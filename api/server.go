@@ -31,7 +31,7 @@ func (server *Server) setupRouter() {
 	// config.AllowOrigins = []string{"http://google.com"}
 	// config.AllowOrigins = []string{"http://google.com", "http://facebook.com"}
 	config.AllowOrigins = []string{"*"}
-	config.AllowAllOrigins = true
+	// config.AllowAllOrigins = true
 
 	router.Use(cors.New(config))
 
