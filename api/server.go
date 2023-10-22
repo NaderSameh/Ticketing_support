@@ -33,7 +33,8 @@ func (server *Server) setupRouter() {
 	config.AllowOrigins = []string{"*"}
 	// config.AllowAllOrigins = true
 
-	router.Use(cors.New(config))
+	// router.Use(cors.New(config))
+	router.Use(CORSMiddleware())
 
 	//tickets
 	router.POST("/tickets", server.createTicket)              // Create new ticket
