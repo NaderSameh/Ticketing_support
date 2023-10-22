@@ -1,12 +1,16 @@
 package api
 
 import (
+	"time"
+
 	"github.com/gin-contrib/cors"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
 	_ "github.com/naderSameh/ticketing_support/docs"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
 )
 
 type Server struct {
@@ -25,17 +29,15 @@ func NewServer(store db.Store) (*Server, error) {
 }
 
 func (server *Server) setupRouter() {
-	router := gin.Default()
+	// For debug mode
+	// router := gin.Default()
 
-	config := cors.DefaultConfig()
-	// config.AllowOrigins = []string{"http://google.com"}
-	// config.AllowOrigins = []string{"http://google.com", "http://facebook.com"}
-	config.AllowOrigins = []string{"*"}
-	// config.AllowAllOrigins = true
+	//For release mode
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
 
-	// router.Use(cors.New(config))
-	router.Use(CORSMiddleware())
-
+	SetupCORS(router)
+	SetupLogger(router)
 	//tickets
 	router.POST("/tickets", server.createTicket)              // Create new ticket
 	router.DELETE("/tickets/:ticket_id", server.deleteTicket) // Delete ticket with its comments
@@ -59,6 +61,32 @@ func (server *Server) setupRouter() {
 
 }
 
+func SetupCORS(router *gin.Engine) {
+
+	config := cors.DefaultConfig()
+	// config.AllowOrigins = []string{"http://google.com"}
+	// config.AllowOrigins = []string{"http://google.com", "http://facebook.com"}
+	config.AllowOrigins = []string{"*"}
+	// config.AllowAllOrigins = true
+
+	// router.Use(cors.New(config))
+	router.Use(CORSMiddleware())
+
+}
+func SetupLogger(router *gin.Engine) {
+
+	logger, _ := zap.NewProduction()
+	// Add a ginzap middleware, which:
+	//   - Logs all requests, like a combined access and error log.
+	//   - Logs to stdout.
+	//   - RFC3339 with UTC time format.
+
+	router.Use(ginzap.Ginzap(logger, time.RFC3339, true))
+
+	// Logs all panic to error log
+	router.Use(ginzap.RecoveryWithZap(logger, true))
+
+}
 func (server *Server) Start(address string) error {
 	return server.router.Run(address)
 }

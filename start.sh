@@ -1,5 +1,5 @@
 #!/bin/sh
-
+DB_SOURCE=postgresql://nader:nader123@postgres:5432/ticketing_support?sslmode=disable
 set -e
 
 echo "run db migration"
