@@ -69,7 +69,8 @@ func SetupCORS(router *gin.Engine) {
 	config.AllowOrigins = []string{"*"}
 	// config.AllowAllOrigins = true
 
-	router.Use(cors.New(config))
+	// router.Use(cors.New(config))
+	router.Use(CORSMiddleware())
 
 }
 func SetupLogger(router *gin.Engine) {
