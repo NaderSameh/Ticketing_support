@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hibiken/asynq"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
 	"github.com/naderSameh/ticketing_support/token"
+	worker "github.com/naderSameh/ticketing_support/woker"
 	"golang.org/x/exp/slices"
 )
 
@@ -48,11 +50,24 @@ func (server *Server) createTicket(c *gin.Context) {
 		UserAssigned: req.UserAssigned,
 		CategoryID:   req.CategoryID,
 	}
+
 	ticket, err := server.store.CreateTicket(c, arg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+	taskPayload := &worker.PayloadSendEmail{
+		User:    req.UserAssigned,
+		Content: req.Description,
+	}
+	opts := []asynq.Option{
+		asynq.MaxRetry(10),
+		asynq.ProcessIn(10 * time.Second),
+		asynq.Queue(worker.QueueCritical),
+	}
+
+	server.taskDistributor.NewEmailDeliveryTask(taskPayload, opts...)
+
 	c.JSON(http.StatusOK, ticket)
 
 }

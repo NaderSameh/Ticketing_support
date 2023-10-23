@@ -2,12 +2,14 @@ package main
 
 import (
 	"database/sql"
-	"log"
 
 	_ "github.com/lib/pq"
 	"github.com/naderSameh/ticketing_support/api"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
+	"github.com/naderSameh/ticketing_support/mail"
 	"github.com/naderSameh/ticketing_support/util"
+	worker "github.com/naderSameh/ticketing_support/woker"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )
 
@@ -35,23 +37,36 @@ func main() {
 
 	err := util.Loadconfig(".")
 	if err != nil {
-		log.Fatal("cannot load config:", err)
+		log.Fatal().Err(err).Msg("cannot load config")
 	}
 
 	conn, err := sql.Open(viper.GetString("DB_DRIVER"), viper.GetString("DB_SOURCE"))
 	if err != nil {
-		log.Fatal("cannot connect to db:", err)
+		log.Fatal().Err(err).Msg("cannot connect to db")
+	}
+	store := db.NewStore(conn)
+	taskDistributor := worker.NewRedisDistributor(viper.GetString("REDDIS_ADDR"))
+
+	server, err := api.NewServer(store, taskDistributor)
+	if err != nil {
+		log.Fatal().Err(err).Msg("cannot create server")
 	}
 
-	store := db.NewStore(conn)
-	server, err := api.NewServer(store)
-	if err != nil {
-		log.Fatal("cannot create server:", err)
-	}
+	go runTaskProcessor(viper.GetString("REDDIS_ADDR"))
 
 	server.Start(viper.GetString("SERVER_ADDRESS"))
 	if err != nil {
-		log.Fatal("cannot start server:", err)
+		log.Fatal().Err(err).Msg("cannot start server:")
 	}
 
+}
+
+func runTaskProcessor(RedisAddress string) {
+	mailer := mail.NewGmailSender(viper.GetString("GMAIL_NAME"), viper.GetString("GMAIL_EMAIL"), viper.GetString("GMAIL_PASS"))
+	taskProcessor := worker.NewRedisTaskProcessor(RedisAddress, mailer)
+	log.Info().Msg("start task processor")
+	err := taskProcessor.Start()
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to start task processor")
+	}
 }

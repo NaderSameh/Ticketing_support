@@ -19,5 +19,9 @@ test:
 swag:
 	swag init --parseDependency  --parseInternal -g main.go
 
+	
+redis:
+	docker run --name redis -p 6379:6379 -d redis:7-alpine
+
 .PHONY:
-	migrateup migratedown postgres sqlc mock swag
+	migrateup migratedown postgres sqlc mock swag redis

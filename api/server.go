@@ -8,20 +8,23 @@ import (
 	"github.com/gin-gonic/gin"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
 	_ "github.com/naderSameh/ticketing_support/docs"
+	worker "github.com/naderSameh/ticketing_support/woker"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 )
 
 type Server struct {
-	store  db.Store
-	router *gin.Engine
+	store           db.Store
+	router          *gin.Engine
+	taskDistributor worker.TaskDistributor
 }
 
-func NewServer(store db.Store) (*Server, error) {
+func NewServer(store db.Store, taskDistributor worker.TaskDistributor) (*Server, error) {
 
 	server := &Server{
-		store: store,
+		store:           store,
+		taskDistributor: taskDistributor,
 	}
 
 	server.setupRouter()

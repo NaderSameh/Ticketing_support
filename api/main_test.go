@@ -11,7 +11,7 @@ import (
 )
 
 func newTestServer(t *testing.T, store db.Store) *Server {
-	server, err := NewServer(store)
+	server, err := NewServer(store, nil)
 	require.NoError(t, err)
 
 	server1 := &http.Server{

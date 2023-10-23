@@ -7,17 +7,23 @@ services:
       - "8080:8080"
     environment:
       - DB_SOURCE=postgresql://nader:nader123@postgres:5432/ticketing_support?sslmode=disable
+      - REDDIS_ADDR=redis:6379
     labels:
       logging: "promtail"
       logging_jobname: "containerlogs"
     depends_on:
+      redis:
+        condition: service_started
       postgres:
         condition: service_healthy
     networks:
       - app
     entrypoint: [ "/app/start.sh" ]
     command: [ "/app/main" ]
-
+  redis:
+    image: redis:7-alpine
+    networks:
+      - app
   postgres:
     image: postgres:alpine3.18
     environment:
