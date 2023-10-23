@@ -141,7 +141,7 @@ func TestListCategories(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			url := "/categories"
@@ -279,7 +279,7 @@ func TestCreateCategory(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildstuds(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 
 			url := "/categories"
 

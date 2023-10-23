@@ -8,7 +8,7 @@ import (
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
 	"github.com/naderSameh/ticketing_support/mail"
 	"github.com/naderSameh/ticketing_support/util"
-	worker "github.com/naderSameh/ticketing_support/woker"
+	worker "github.com/naderSameh/ticketing_support/worker"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 )

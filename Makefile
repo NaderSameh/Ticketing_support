@@ -12,6 +12,7 @@ sqlc:
 
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/naderSameh/ticketing_support/db/sqlc Store
+	mockgen -package mockwk -destination worker/mock/distributor.go github.com/naderSameh/ticketing_support/worker TaskDistributor
 
 test:
 	go test -cover ./...
@@ -24,4 +25,4 @@ redis:
 	docker run --name redis -p 6379:6379 -d redis:7-alpine
 
 .PHONY:
-	migrateup migratedown postgres sqlc mock swag redis
+	migrateup migratedown postgres sqlc mock swag redis test

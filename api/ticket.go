@@ -10,7 +10,7 @@ import (
 	"github.com/hibiken/asynq"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
 	"github.com/naderSameh/ticketing_support/token"
-	worker "github.com/naderSameh/ticketing_support/woker"
+	worker "github.com/naderSameh/ticketing_support/worker"
 	"golang.org/x/exp/slices"
 )
 
@@ -66,7 +66,11 @@ func (server *Server) createTicket(c *gin.Context) {
 		asynq.Queue(worker.QueueCritical),
 	}
 
-	server.taskDistributor.NewEmailDeliveryTask(taskPayload, opts...)
+	err = server.taskDistributor.NewEmailDeliveryTask(taskPayload, opts...)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
 
 	c.JSON(http.StatusOK, ticket)
 
@@ -242,5 +246,66 @@ func (server *Server) updateTicket(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, tickets)
+
+}
+
+type getTicketRequestJSON struct {
+	UserAssigned string `json:"user_assigned"`
+}
+type getTicketRequestURI struct {
+	TicketID int64 `uri:"ticket_id" binding:"required,min=1"`
+}
+
+// GetTicket godoc
+//
+//	@Summary		Get ticket by ID
+//	@Description	Admins get any ticket, normal user only get a ticket he owns
+//	@Tags			Tickets
+//
+//
+//	@Produce		json
+//	@Param			ticket_id		path		string	true	"Ticket ID"
+//	@Param			user_assigned	body		string	false	"Ticket owner"
+//
+//	@Success		200				{array}		db.Ticket
+//	@Failure		401				{object}	error
+//	@Failure		400				{object}	error
+//	@Failure		500				{object}	error
+//	@Router			/tickets [get]
+func (server *Server) getTicket(c *gin.Context) {
+	var reqURI getTicketRequestURI
+	var reqJSON getTicketRequestJSON
+	if err := c.ShouldBindUri(&reqURI); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+	if slices.Contains(authPayload.Permissions, "tickets.GET") {
+
+		ticket, err := server.store.GetTicket(c, reqURI.TicketID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+		c.JSON(http.StatusOK, ticket)
+		return
+	}
+
+	if err := c.ShouldBindJSON(&reqJSON); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	ticket, err := server.store.GetTicket(c, reqURI.TicketID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	if ticket.UserAssigned != reqJSON.UserAssigned {
+		c.JSON(http.StatusUnauthorized, errorResponse(errors.New("user doesn't own that ticket")))
+		return
+	}
+	c.JSON(http.StatusOK, ticket)
 
 }

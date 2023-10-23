@@ -7,11 +7,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
+	worker "github.com/naderSameh/ticketing_support/worker"
 	"github.com/stretchr/testify/require"
 )
 
-func newTestServer(t *testing.T, store db.Store) *Server {
-	server, err := NewServer(store, nil)
+func newTestServer(t *testing.T, store db.Store, taskDistributor worker.TaskDistributor) *Server {
+	server, err := NewServer(store, taskDistributor)
 	require.NoError(t, err)
 
 	server1 := &http.Server{

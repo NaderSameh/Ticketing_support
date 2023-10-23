@@ -136,7 +136,7 @@ func TestCreateComment(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -251,7 +251,7 @@ func TestDeleteComment(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/tickets/%d/comments/%d", tc.ticket_id, tc.comment_id)
@@ -400,7 +400,7 @@ func TestListComment(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/tickets/%d/comments", tc.ticket_id)
@@ -666,7 +666,7 @@ func TestUpdateComment(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)

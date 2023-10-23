@@ -16,6 +16,7 @@ import (
 	mockdb "github.com/naderSameh/ticketing_support/db/mock"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
 	"github.com/naderSameh/ticketing_support/util"
+	mockwk "github.com/naderSameh/ticketing_support/worker/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,7 +56,7 @@ func TestCreateTicket(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          gin.H
-		buildStubs    func(store *mockdb.MockStore)
+		buildStubs    func(store *mockdb.MockStore, worker *mockwk.MockTaskDistributor)
 		checkResponse func(recoder *httptest.ResponseRecorder)
 	}{
 		{
@@ -67,7 +68,7 @@ func TestCreateTicket(t *testing.T) {
 				"user_assigned": ticket.UserAssigned,
 				"category_id":   ticket.CategoryID,
 			},
-			buildStubs: func(store *mockdb.MockStore) {
+			buildStubs: func(store *mockdb.MockStore, workermock *mockwk.MockTaskDistributor) {
 				arg := db.CreateTicketParams{
 					Title:        ticket.Title,
 					Description:  ticket.Description,
@@ -80,11 +81,14 @@ func TestCreateTicket(t *testing.T) {
 					CreateTicket(gomock.Any(), gomock.Eq(arg)).
 					Times(1).
 					Return(ticket, nil)
+
+				workermock.EXPECT().NewEmailDeliveryTask(gomock.Any(), gomock.Any()).Times(1).Return(nil)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
-		}, {
+		},
+		{
 			name: "Missing data",
 			body: gin.H{
 				"title":         ticket.Title,
@@ -93,7 +97,7 @@ func TestCreateTicket(t *testing.T) {
 				"user_assigned": ticket.UserAssigned,
 				// "category_id":   ticket.CategoryID,
 			},
-			buildStubs: func(store *mockdb.MockStore) {
+			buildStubs: func(store *mockdb.MockStore, workermock *mockwk.MockTaskDistributor) {
 				arg := db.CreateTicketParams{
 					Title:        ticket.Title,
 					Description:  ticket.Description,
@@ -106,6 +110,7 @@ func TestCreateTicket(t *testing.T) {
 					CreateTicket(gomock.Any(), gomock.Eq(arg)).
 					Times(0).
 					Return(ticket, nil)
+				workermock.EXPECT().NewEmailDeliveryTask(gomock.Any(), gomock.Any()).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -120,10 +125,11 @@ func TestCreateTicket(t *testing.T) {
 				"user_assigned": ticket.UserAssigned,
 				"category_id":   ticket.CategoryID,
 			},
-			buildStubs: func(store *mockdb.MockStore) {
+			buildStubs: func(store *mockdb.MockStore, workermock *mockwk.MockTaskDistributor) {
 				store.EXPECT().
 					CreateTicket(gomock.Any(), gomock.Any()).
 					Times(0)
+				workermock.EXPECT().NewEmailDeliveryTask(gomock.Any(), gomock.Any()).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -138,7 +144,7 @@ func TestCreateTicket(t *testing.T) {
 				"user_assigned": ticket.UserAssigned,
 				"category_id":   ticket.CategoryID,
 			},
-			buildStubs: func(store *mockdb.MockStore) {
+			buildStubs: func(store *mockdb.MockStore, workermock *mockwk.MockTaskDistributor) {
 				arg := db.CreateTicketParams{
 					Title:        ticket.Title,
 					Description:  ticket.Description,
@@ -150,6 +156,7 @@ func TestCreateTicket(t *testing.T) {
 				store.EXPECT().
 					CreateTicket(gomock.Any(), gomock.Eq(arg)).
 					Times(1).Return(ticket, sql.ErrConnDone)
+				workermock.EXPECT().NewEmailDeliveryTask(gomock.Any(), gomock.Any()).Times(0)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -164,10 +171,14 @@ func TestCreateTicket(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			store := mockdb.NewMockStore(ctrl)
-			tc.buildStubs(store)
+			ctrl2 := gomock.NewController(t)
+			defer ctrl2.Finish()
 
-			server := newTestServer(t, store)
+			store := mockdb.NewMockStore(ctrl)
+			taskDistributor := mockwk.NewMockTaskDistributor(ctrl2)
+			tc.buildStubs(store, taskDistributor)
+
+			server := newTestServer(t, store, taskDistributor)
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -265,7 +276,7 @@ func TestDeleteTicket(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			url := fmt.Sprintf("/tickets/%d", tc.query.ticket_id)
@@ -465,7 +476,7 @@ func TestListTicket(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON
@@ -482,6 +493,161 @@ func TestListTicket(t *testing.T) {
 			q.Add("page_id", fmt.Sprintf("%d", tc.query.page_id))
 			q.Add("page_size", fmt.Sprintf("%d", tc.query.page_size))
 			request.URL.RawQuery = q.Encode()
+			tc.setupAuth(t, request)
+			server.router.ServeHTTP(recorder, request)
+			tc.checkResponse(recorder)
+		})
+	}
+}
+func TestGetTicket(t *testing.T) {
+
+	ticket := createRandomTicket("martin")
+
+	testCases := []struct {
+		name          string
+		ticket_id     int64
+		body          gin.H
+		setupAuth     func(t *testing.T, request *http.Request)
+		buildStubs    func(store *mockdb.MockStore)
+		checkResponse func(recoder *httptest.ResponseRecorder)
+	}{
+		{
+			name:      "OK admin",
+			ticket_id: ticket.TicketID,
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				store.EXPECT().
+					GetTicket(gomock.Any(), ticket.TicketID).
+					Times(1).
+					Return(ticket, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		},
+		{
+			name:      "OK user",
+			ticket_id: ticket.TicketID,
+			body: gin.H{
+				"user_assigned": "martin",
+			},
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenNoPermission, authorizationTypeBearer)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				store.EXPECT().
+					GetTicket(gomock.Any(), ticket.TicketID).
+					Times(1).
+					Return(ticket, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+			},
+		}, {
+			name: "Missing ticket ID",
+			// ticket_id: ticket.TicketID,
+			body: gin.H{
+				"user_assigned": "martin",
+			},
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenNoPermission, authorizationTypeBearer)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				store.EXPECT().
+					GetTicket(gomock.Any(), ticket.TicketID).
+					Times(0).
+					Return(ticket, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
+		{
+			name:      "Unauthorized request",
+			ticket_id: ticket.TicketID,
+			body: gin.H{
+				"user_assigned": "not martin",
+			},
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenNoPermission, authorizationTypeBearer)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				store.EXPECT().
+					GetTicket(gomock.Any(), ticket.TicketID).
+					Times(1).
+					Return(ticket, nil)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+
+		{
+			name:      "internal server error admin",
+			ticket_id: ticket.TicketID,
+			body: gin.H{
+				"user_assigned": "martin",
+			},
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenNoPermission, authorizationTypeBearer)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				store.EXPECT().
+					GetTicket(gomock.Any(), ticket.TicketID).
+					Times(1).
+					Return(ticket, sql.ErrConnDone)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+		{
+			name:      "internal server error user",
+			ticket_id: ticket.TicketID,
+			setupAuth: func(t *testing.T, request *http.Request) {
+				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+
+				store.EXPECT().
+					GetTicket(gomock.Any(), ticket.TicketID).
+					Times(1).
+					Return(ticket, sql.ErrConnDone)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+			},
+		},
+	}
+
+	for i := range testCases {
+		tc := testCases[i]
+
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			store := mockdb.NewMockStore(ctrl)
+			tc.buildStubs(store)
+
+			server := newTestServer(t, store, nil)
+			recorder := httptest.NewRecorder()
+
+			// Marshal body data to JSON
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
+
+			url := fmt.Sprintf("/tickets/%d", tc.ticket_id)
+			request, err := http.NewRequest(http.MethodGet, url, bytes.NewReader(data))
+			require.NoError(t, err)
+
 			tc.setupAuth(t, request)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
@@ -759,7 +925,7 @@ func TestUpdateTicket(t *testing.T) {
 			store := mockdb.NewMockStore(ctrl)
 			tc.buildStubs(store)
 
-			server := newTestServer(t, store)
+			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
 			// Marshal body data to JSON

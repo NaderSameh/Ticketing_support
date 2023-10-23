@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
 	_ "github.com/naderSameh/ticketing_support/docs"
-	worker "github.com/naderSameh/ticketing_support/woker"
+	worker "github.com/naderSameh/ticketing_support/worker"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -57,6 +57,7 @@ func (server *Server) setupRouter() {
 
 	authRoutes := router.Group("/").Use(authMiddleware())
 	authRoutes.GET("/tickets", server.listTicket)              // Get list of tickets
+	authRoutes.GET("/tickets/:ticket_id", server.getTicket)    // Get single ticket
 	authRoutes.POST("/categories", server.createCategory)      // Create Category
 	authRoutes.PUT("/tickets/:ticket_id", server.updateTicket) //Assign ticket or update its status
 
