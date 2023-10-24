@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func createRandomTicket() (ticket Ticket, err error) {
+func createRandomTicket() (ticket Ticket, err error, cateogry Category) {
 
 	category, err := createRandomCategory()
-	return testQueries.CreateTicket(context.Background(),
+	ticket, err = testQueries.CreateTicket(context.Background(),
 		CreateTicketParams{
 			Title:        "RANDOM",
 			Description:  "RANDOM TEXT",
@@ -20,6 +20,8 @@ func createRandomTicket() (ticket Ticket, err error) {
 			UserAssigned: "RANDOM USER",
 			CategoryID:   category.CategoryID,
 		})
+
+	return ticket, err, category
 
 }
 func TestCreateTicket(t *testing.T) {
@@ -51,7 +53,7 @@ func TestCreateTicket(t *testing.T) {
 }
 
 func TestDeleteTicket(t *testing.T) {
-	ticket, err := createRandomTicket()
+	ticket, err, _ := createRandomTicket()
 	require.NoError(t, err)
 
 	err = testQueries.DeleteTicket(context.Background(), ticket.TicketID)
@@ -65,7 +67,7 @@ func TestDeleteTicket(t *testing.T) {
 }
 
 func TestGetTicket(t *testing.T) {
-	ticket1, err := createRandomTicket()
+	ticket1, err, _ := createRandomTicket()
 	require.NoError(t, err)
 
 	ticket2, err := testQueries.GetTicket(context.Background(), ticket1.TicketID)
@@ -74,7 +76,7 @@ func TestGetTicket(t *testing.T) {
 }
 
 func TestGetTicketForUpdate(t *testing.T) {
-	ticket1, err := createRandomTicket()
+	ticket1, err, _ := createRandomTicket()
 	require.NoError(t, err)
 
 	ticket2, err := testQueries.GetTicketForUpdate(context.Background(), ticket1.TicketID)
@@ -83,7 +85,7 @@ func TestGetTicketForUpdate(t *testing.T) {
 }
 
 func TestUpdateTicket(t *testing.T) {
-	ticket1, err := createRandomTicket()
+	ticket1, err, _ := createRandomTicket()
 
 	args := UpdateTicketParams{
 		TicketID:   ticket1.TicketID,
@@ -100,36 +102,68 @@ func TestUpdateTicket(t *testing.T) {
 	require.Equal(t, ticket.AssignedTo.Valid, args.AssignedTo.Valid)
 }
 
-func TestListTickets(t *testing.T) {
-	var lastTicket Ticket
-	for i := 0; i < 10; i++ {
-		lastTicket, _ = createRandomTicket()
-		createRandomTicket()
-	}
-
-	args := ListTicketsParams{
-		UserAssigned: lastTicket.UserAssigned,
-		Limit:        5,
-		Offset:       0,
-	}
-
-	tickets, err := testQueries.ListTickets(context.Background(), args)
-	require.NoError(t, err)
-	require.NotEmpty(t, tickets)
-}
-
 func TestListAllTickets(t *testing.T) {
+	var lastTicket Ticket
+	var category Category
 	for i := 0; i < 10; i++ {
-		createRandomTicket()
+		lastTicket, _, category = createRandomTicket()
 	}
 
 	args := ListAllTicketsParams{
-		Limit:  10,
+		UserAssigned: sql.NullString{
+			String: lastTicket.UserAssigned,
+			Valid:  true,
+		},
+		Limit:  5,
 		Offset: 0,
 	}
 
 	tickets, err := testQueries.ListAllTickets(context.Background(), args)
 	require.NoError(t, err)
 	require.NotEmpty(t, tickets)
-	require.Len(t, tickets, 10)
+	require.Len(t, tickets, 5)
+
+	args2 := ListAllTicketsParams{
+		UserAssigned: sql.NullString{
+			String: "",
+			Valid:  false,
+		},
+		AssignedTo: sql.NullString{
+			String: "",
+			Valid:  false,
+		},
+		CategoryID: sql.NullInt64{
+			Int64: category.CategoryID,
+			Valid: true,
+		},
+
+		Limit:  5,
+		Offset: 0,
+	}
+
+	tickets, err = testQueries.ListAllTickets(context.Background(), args2)
+	require.NoError(t, err)
+	require.Len(t, tickets, 1)
+
+	args3 := ListAllTicketsParams{
+		UserAssigned: sql.NullString{
+			String: "",
+			Valid:  false,
+		},
+		AssignedTo: sql.NullString{
+			String: "Nader",
+			Valid:  true,
+		},
+		CategoryID: sql.NullInt64{
+			Int64: category.CategoryID,
+			Valid: true,
+		},
+
+		Limit:  5,
+		Offset: 0,
+	}
+
+	tickets, err = testQueries.ListAllTickets(context.Background(), args3)
+	require.NoError(t, err)
+	require.Len(t, tickets, 0)
 }

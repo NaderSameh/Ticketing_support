@@ -18,17 +18,13 @@ WHERE ticket_id = $1 LIMIT 1
 FOR NO KEY UPDATE;
 
 
--- name: ListTickets :many
-SELECT * FROM tickets
-WHERE user_assigned = $1
-ORDER BY ticket_id
-LIMIT $2
-OFFSET $3;
-
 
 
 -- name: ListAllTickets :many
 SELECT * FROM tickets
+WHERE (user_assigned = sqlc.narg('user_assigned') OR sqlc.narg('user_assigned') IS NULL)
+AND (assigned_to = sqlc.narg('assigned_to') OR sqlc.narg('assigned_to') IS NULL)
+AND (category_id = sqlc.narg('category_id') OR sqlc.narg('category_id') IS NULL)
 ORDER BY ticket_id
 LIMIT $1
 OFFSET $2;

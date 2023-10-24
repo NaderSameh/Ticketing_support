@@ -111,66 +111,30 @@ func (q *Queries) GetTicketForUpdate(ctx context.Context, ticketID int64) (Ticke
 
 const listAllTickets = `-- name: ListAllTickets :many
 SELECT ticket_id, title, description, status, created_at, updated_at, closed_at, category_id, user_assigned, assigned_to FROM tickets
+WHERE (user_assigned = $3 OR $3 IS NULL)
+AND (assigned_to = $4 OR $4 IS NULL)
+AND (category_id = $5 OR $5 IS NULL)
 ORDER BY ticket_id
 LIMIT $1
 OFFSET $2
 `
 
 type ListAllTicketsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Limit        int32          `json:"limit"`
+	Offset       int32          `json:"offset"`
+	UserAssigned sql.NullString `json:"user_assigned"`
+	AssignedTo   sql.NullString `json:"assigned_to"`
+	CategoryID   sql.NullInt64  `json:"category_id"`
 }
 
 func (q *Queries) ListAllTickets(ctx context.Context, arg ListAllTicketsParams) ([]Ticket, error) {
-	rows, err := q.db.QueryContext(ctx, listAllTickets, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Ticket{}
-	for rows.Next() {
-		var i Ticket
-		if err := rows.Scan(
-			&i.TicketID,
-			&i.Title,
-			&i.Description,
-			&i.Status,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.ClosedAt,
-			&i.CategoryID,
-			&i.UserAssigned,
-			&i.AssignedTo,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listTickets = `-- name: ListTickets :many
-SELECT ticket_id, title, description, status, created_at, updated_at, closed_at, category_id, user_assigned, assigned_to FROM tickets
-WHERE user_assigned = $1
-ORDER BY ticket_id
-LIMIT $2
-OFFSET $3
-`
-
-type ListTicketsParams struct {
-	UserAssigned string `json:"user_assigned"`
-	Limit        int32  `json:"limit"`
-	Offset       int32  `json:"offset"`
-}
-
-func (q *Queries) ListTickets(ctx context.Context, arg ListTicketsParams) ([]Ticket, error) {
-	rows, err := q.db.QueryContext(ctx, listTickets, arg.UserAssigned, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listAllTickets,
+		arg.Limit,
+		arg.Offset,
+		arg.UserAssigned,
+		arg.AssignedTo,
+		arg.CategoryID,
+	)
 	if err != nil {
 		return nil, err
 	}

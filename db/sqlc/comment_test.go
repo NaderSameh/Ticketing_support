@@ -17,7 +17,7 @@ func createRadomComment(ticker_number int64) (Comment, error) {
 }
 
 func TestCreateComment(t *testing.T) {
-	ticket, _ := createRandomTicket()
+	ticket, _, _ := createRandomTicket()
 
 	args := CreateCommentParams{
 		CommentText:   "Cypod is the best",
@@ -34,7 +34,7 @@ func TestCreateComment(t *testing.T) {
 }
 
 func TestDeleteComment(t *testing.T) {
-	ticket, _ := createRandomTicket()
+	ticket, _, _ := createRandomTicket()
 	comment, err := createRadomComment(ticket.TicketID)
 
 	err = testQueries.DeleteComment(context.Background(), comment.CommentID)
@@ -48,7 +48,7 @@ func TestDeleteComment(t *testing.T) {
 }
 
 func TestUpdateComment(t *testing.T) {
-	ticket, _ := createRandomTicket()
+	ticket, _, _ := createRandomTicket()
 	comment, err := createRadomComment(ticket.TicketID)
 
 	args := UpdateCommentParams{
@@ -64,7 +64,7 @@ func TestUpdateComment(t *testing.T) {
 
 func TestListComments(t *testing.T) {
 
-	ticket, _ := createRandomTicket()
+	ticket, _, _ := createRandomTicket()
 
 	var lastComment Comment
 	var err error

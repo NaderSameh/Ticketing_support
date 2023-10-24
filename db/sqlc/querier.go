@@ -22,7 +22,6 @@ type Querier interface {
 	ListAllTickets(ctx context.Context, arg ListAllTicketsParams) ([]Ticket, error)
 	ListCategories(ctx context.Context, arg ListCategoriesParams) ([]Category, error)
 	ListComments(ctx context.Context, arg ListCommentsParams) ([]Comment, error)
-	ListTickets(ctx context.Context, arg ListTicketsParams) ([]Ticket, error)
 	UpdateComment(ctx context.Context, arg UpdateCommentParams) (Comment, error)
 	UpdateTicket(ctx context.Context, arg UpdateTicketParams) (Ticket, error)
 }

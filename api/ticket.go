@@ -118,6 +118,8 @@ func (server *Server) deleteTicket(c *gin.Context) {
 
 type listTicketRequest struct {
 	UserAssigned string `form:"user_assigned"`
+	Assigned_to  string `form:"assigned_to"`
+	Category_ID  int64  `form:"category_id"`
 	PageID       int32  `form:"page_id" binding:"required,min=1"`
 	PageSize     int32  `form:"page_size" binding:"required,min=5,max=10"`
 }
@@ -125,18 +127,24 @@ type listTicketRequest struct {
 // ListTickets godoc
 //
 //	@Summary		List tickets
-//	@Description	List all tickets for a specific user
+//	@Description	List all tickets for a specific user, Admin can get all tickets and can add query param to filter by category ID, assigned engineer and ticket owner normal user only can only get all tickets assigned to him
+//
+//
 //	@Tags			Tickets
 //
 //
 //	@Produce		json
-//	@Param			user_assigned	query		string	true	"Ticket owner"
+//	@Param			user_assigned	query		string	false	"Filter Ticket owner"
 //	@Param			page_id			query		int		true	"Page ID"
 //	@Param			page_size		query		int		true	"Page Size"
+//	@Param			category_id		query		int		false	"Filter Category ID"
+//	@Param			assigned_to		query		string	false	"Filter Assigned engineer"
 //
 //	@Success		200				{array}		db.Ticket
 //	@Failure		400				{object}	error
+//	@Failure		401				{object}	error
 //	@Failure		500				{object}	error
+//	@Security		ApiKeyAuth
 //	@Router			/tickets [get]
 func (server *Server) listTicket(c *gin.Context) {
 	var req listTicketRequest
@@ -145,15 +153,30 @@ func (server *Server) listTicket(c *gin.Context) {
 		return
 	}
 
-	arg := db.ListTicketsParams{
-		UserAssigned: req.UserAssigned,
-		Limit:        req.PageSize,
-		Offset:       (req.PageID - 1) * req.PageSize,
-	}
-
 	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
 	if slices.Contains(authPayload.Permissions, "tickets.GET") {
+
+		var userAssignedBool, assignedToBool, categoryIDBool bool
+		if req.UserAssigned != "" {
+			userAssignedBool = true
+		} else if req.Assigned_to != "" {
+			assignedToBool = true
+		} else if req.Category_ID != 0 {
+			categoryIDBool = true
+		}
 		arg2 := db.ListAllTicketsParams{
+			UserAssigned: sql.NullString{
+				String: req.UserAssigned,
+				Valid:  userAssignedBool,
+			},
+			AssignedTo: sql.NullString{
+				String: req.Assigned_to,
+				Valid:  assignedToBool,
+			},
+			CategoryID: sql.NullInt64{
+				Int64: req.Category_ID,
+				Valid: categoryIDBool,
+			},
 			Limit:  req.PageSize,
 			Offset: (req.PageID - 1) * req.PageSize,
 		}
@@ -165,8 +188,15 @@ func (server *Server) listTicket(c *gin.Context) {
 		c.JSON(http.StatusOK, tickets)
 		return
 	}
-
-	tickets, err := server.store.ListTickets(c, arg)
+	arg := db.ListAllTicketsParams{
+		UserAssigned: sql.NullString{
+			String: authPayload.StandardClaims.Subject,
+			Valid:  true,
+		},
+		Limit:  req.PageSize,
+		Offset: (req.PageID - 1) * req.PageSize,
+	}
+	tickets, err := server.store.ListAllTickets(c, arg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -202,6 +232,7 @@ type updateTicketRequestURI struct {
 //	@Failure		401			{object}	error
 //	@Failure		404			{object}	error
 //	@Failure		500			{object}	error
+//	@Security		ApiKeyAuth
 //	@Router			/tickets/{ticket_id} [put]
 func (server *Server) updateTicket(c *gin.Context) {
 	var req updateTicketRequestJSON
@@ -249,9 +280,6 @@ func (server *Server) updateTicket(c *gin.Context) {
 
 }
 
-type getTicketRequestJSON struct {
-	UserAssigned string `json:"user_assigned"`
-}
 type getTicketRequestURI struct {
 	TicketID int64 `uri:"ticket_id" binding:"required,min=1"`
 }
@@ -264,17 +292,16 @@ type getTicketRequestURI struct {
 //
 //
 //	@Produce		json
-//	@Param			ticket_id		path		string	true	"Ticket ID"
-//	@Param			user_assigned	body		string	false	"Ticket owner"
+//	@Param			ticket_id	path		string	true	"Ticket ID"
 //
-//	@Success		200				{array}		db.Ticket
-//	@Failure		401				{object}	error
-//	@Failure		400				{object}	error
-//	@Failure		500				{object}	error
-//	@Router			/tickets [get]
+//	@Success		200			{array}		db.Ticket
+//	@Failure		401			{object}	error
+//	@Failure		400			{object}	error
+//	@Failure		500			{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/tickets/{ticket_id} [get]
 func (server *Server) getTicket(c *gin.Context) {
 	var reqURI getTicketRequestURI
-	var reqJSON getTicketRequestJSON
 	if err := c.ShouldBindUri(&reqURI); err != nil {
 		c.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -292,17 +319,12 @@ func (server *Server) getTicket(c *gin.Context) {
 		return
 	}
 
-	if err := c.ShouldBindJSON(&reqJSON); err != nil {
-		c.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
 	ticket, err := server.store.GetTicket(c, reqURI.TicketID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	if ticket.UserAssigned != reqJSON.UserAssigned {
+	if ticket.UserAssigned != authPayload.StandardClaims.Subject {
 		c.JSON(http.StatusUnauthorized, errorResponse(errors.New("user doesn't own that ticket")))
 		return
 	}

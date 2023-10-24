@@ -227,21 +227,6 @@ func (mr *MockStoreMockRecorder) ListComments(arg0, arg1 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListComments", reflect.TypeOf((*MockStore)(nil).ListComments), arg0, arg1)
 }
 
-// ListTickets mocks base method.
-func (m *MockStore) ListTickets(arg0 context.Context, arg1 db.ListTicketsParams) ([]db.Ticket, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListTickets", arg0, arg1)
-	ret0, _ := ret[0].([]db.Ticket)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListTickets indicates an expected call of ListTickets.
-func (mr *MockStoreMockRecorder) ListTickets(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTickets", reflect.TypeOf((*MockStore)(nil).ListTickets), arg0, arg1)
-}
-
 // UpdateComment mocks base method.
 func (m *MockStore) UpdateComment(arg0 context.Context, arg1 db.UpdateCommentParams) (db.Comment, error) {
 	m.ctrl.T.Helper()
