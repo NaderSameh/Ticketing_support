@@ -9,6 +9,7 @@ import (
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
 	_ "github.com/naderSameh/ticketing_support/docs"
 	worker "github.com/naderSameh/ticketing_support/worker"
+	"github.com/penglongli/gin-metrics/ginmetrics"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -41,6 +42,7 @@ func (server *Server) setupRouter() {
 
 	SetupCORS(router)
 	SetupLogger(router)
+	SetupMetrics(router)
 	//tickets
 	router.POST("/tickets", server.createTicket)              // Create new ticket
 	router.DELETE("/tickets/:ticket_id", server.deleteTicket) // Delete ticket with its comments
@@ -62,6 +64,24 @@ func (server *Server) setupRouter() {
 	authRoutes.PUT("/tickets/:ticket_id", server.updateTicket) //Assign ticket or update its status
 
 	server.router = router
+
+}
+
+func SetupMetrics(router *gin.Engine) {
+
+	// get global Monitor object
+	m := ginmetrics.GetMonitor()
+
+	// +optional set metric path, default /debug/metrics
+	m.SetMetricPath("/metrics")
+	// +optional set slow time, default 5s
+	m.SetSlowTime(10)
+	// +optional set request duration, default {0.1, 0.3, 1.2, 5, 10}
+	// used to p95, p99
+	m.SetDuration([]float64{0.1, 0.3, 1.2, 5, 10})
+
+	// set middleware for gin
+	m.Use(router)
 
 }
 

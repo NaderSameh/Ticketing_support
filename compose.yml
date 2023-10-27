@@ -44,10 +44,14 @@ services:
       - 3000:3000
     volumes:
       - ./config/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yaml
+      - ./config/dashboard.yml:/etc/grafana/provisioning/dashboards/dashboard.yaml
+      - ./config/dashboards:/var/lib/grafana/dashboards
     environment:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/grafana.json
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
     networks:
       - app
 
@@ -71,6 +75,14 @@ services:
       - loki
     networks:
       - app
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - "./config/prometheus.yml:/etc/prometheus/prometheus.yml"
+    networks:
+      - app
+    ports:
+      - 9090:9090
 
 networks:
   app:
