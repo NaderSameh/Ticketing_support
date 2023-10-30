@@ -19,7 +19,7 @@
   "links": [],
   "panels": [
     {
-      "datasource": null,
+      "datasource": "Prometheus",
       "description": "Application request rate every 5 minutes.",
       "fieldConfig": {
         "defaults": {

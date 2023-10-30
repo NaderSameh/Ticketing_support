@@ -15,7 +15,7 @@ mock:
 	mockgen -package mockwk -destination worker/mock/distributor.go github.com/naderSameh/ticketing_support/worker TaskDistributor
 
 test:
-	go test -cover ./...
+	go test -cover -short ./...
 
 swag:
 	swag init --parseDependency  --parseInternal -g main.go

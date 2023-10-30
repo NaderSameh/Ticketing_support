@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"runtime"
 
 	_ "github.com/lib/pq"
 	"github.com/naderSameh/ticketing_support/api"
@@ -44,7 +45,12 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot connect to db")
 	}
+	conn.SetMaxOpenConns(runtime.NumCPU())
+	n := conn.Stats().MaxOpenConnections
+	log.Info().Int("connections", n).Msg("db max number of connections")
+
 	store := db.NewStore(conn)
+
 	taskDistributor := worker.NewRedisDistributor(viper.GetString("REDDIS_ADDR"))
 
 	server, err := api.NewServer(store, taskDistributor)
