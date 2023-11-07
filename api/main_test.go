@@ -1,12 +1,14 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
+	"github.com/naderSameh/ticketing_support/util"
 	worker "github.com/naderSameh/ticketing_support/worker"
 	"github.com/stretchr/testify/require"
 )
@@ -29,5 +31,9 @@ func newTestServer(t *testing.T, store db.Store, taskDistributor worker.TaskDist
 
 func TestMain(m *testing.M) {
 	gin.SetMode(gin.TestMode)
+	err := util.Loadconfig("../.")
+	if err != nil {
+		fmt.Print("cannot load config")
+	}
 	os.Exit(m.Run())
 }

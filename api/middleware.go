@@ -9,13 +9,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/naderSameh/ticketing_support/token"
+	"github.com/spf13/viper"
 )
 
 const (
 	authorizationHeaderKey  = "authorization"
 	authorizationTypeBearer = "bearer"
 	authorizationPayloadKey = "authorization_payload"
-	secretKey               = "wbguxmeWWlsLwv75423AdsggbBp3853hdsgceDS95dbyFA"
 )
 
 // AuthMiddleware creates a gin middleware for authorization
@@ -50,7 +50,7 @@ func authMiddleware() gin.HandlerFunc {
 			if !ok {
 				return nil, errors.New("token is invalid")
 			}
-			return []byte(secretKey), nil
+			return []byte(viper.GetString("SECRET_KEY")), nil
 		}
 
 		jwtToken, err := jwt.ParseWithClaims(accessToken, &token.Payload{}, keyFunc)

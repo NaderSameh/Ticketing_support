@@ -7,9 +7,9 @@ import (
 )
 
 func Loadconfig(path string) error {
-	viper.SetConfigName("app") // name of config file (without extension)
-	viper.SetConfigType("env") // REQUIRED if the config file does not have the extension in the name
-	viper.AddConfigPath(path)  // path to look for the config file in
+	viper.SetConfigName("test") // name of config file (without extension)
+	viper.SetConfigType("env")  // REQUIRED if the config file does not have the extension in the name
+	viper.AddConfigPath(path)   // path to look for the config file in
 
 	viper.AutomaticEnv()
 

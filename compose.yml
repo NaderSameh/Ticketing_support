@@ -35,6 +35,8 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
+    volumes:
+      - data-volume:/var/lib/postgresql/data
     networks:
       - app
 
@@ -87,3 +89,5 @@ services:
 networks:
   app:
     name: app
+volumes:
+  data-volume:
