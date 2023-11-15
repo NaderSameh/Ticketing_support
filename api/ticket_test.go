@@ -40,7 +40,7 @@ func createRandomCategory() db.Category {
 func createRandomTicket(user_assigned string) db.Ticket {
 	category := createRandomCategory()
 	return db.Ticket{
-		TicketID:     rand.Int63n(100),
+		TicketID:     rand.Int63n(100) + 1,
 		Title:        util.GenerateRandomString(10),
 		Description:  util.GenerateRandomString(40),
 		Status:       "open",

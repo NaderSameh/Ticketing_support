@@ -49,9 +49,6 @@ func main() {
 	n := conn.Stats().MaxOpenConnections
 	log.Info().Int("connections", n).Msg("db max number of connections")
 
-	key := viper.GetString("SECRET_KEY")
-	log.Info().Str("key", key).Msg("db max number of connections")
-
 	store := db.NewStore(conn)
 
 	taskDistributor := worker.NewRedisDistributor(viper.GetString("REDDIS_ADDR"))

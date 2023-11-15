@@ -91,12 +91,12 @@ func TestListCategories(t *testing.T) {
 			name: "internal server error",
 			query: Query{
 				page_id:   1,
-				page_size: 10,
+				page_size: 9,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 
 				arg := db.ListCategoriesParams{
-					Limit:  10,
+					Limit:  9,
 					Offset: 0,
 				}
 

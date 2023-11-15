@@ -2,12 +2,14 @@ package api
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hibiken/asynq"
+	"github.com/naderSameh/ticketing_support/cache"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
 	"github.com/naderSameh/ticketing_support/token"
 	worker "github.com/naderSameh/ticketing_support/worker"
@@ -185,6 +187,15 @@ func (server *Server) listTicket(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
+		url := c.FullPath()
+		redisClient := cache.NewCacheClient().RedisClient
+		// put it to the cache
+		content, err := json.Marshal(tickets)
+		err = redisClient.Set(c, url, content, time.Minute*5).Err()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
 		c.JSON(http.StatusOK, tickets)
 		return
 	}
@@ -197,6 +208,16 @@ func (server *Server) listTicket(c *gin.Context) {
 		Offset: (req.PageID - 1) * req.PageSize,
 	}
 	tickets, err := server.store.ListAllTickets(c, arg)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	url := c.FullPath()
+	redisClient := cache.NewCacheClient().RedisClient
+	// put it to the cache
+	content, err := json.Marshal(tickets)
+	err = redisClient.Set(c, url, content, time.Minute*5).Err()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

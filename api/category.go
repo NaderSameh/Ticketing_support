@@ -1,12 +1,17 @@
 package api
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/naderSameh/ticketing_support/cache"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
 	"github.com/naderSameh/ticketing_support/token"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/exp/slices"
 )
 
@@ -75,17 +80,37 @@ func (server *Server) listCategories(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+	url := c.FullPath() + c.Query("page_id") + c.Query("page_size")
+	redisClient := cache.NewCacheClient().RedisClient
 
 	arg := db.ListCategoriesParams{
 		Limit:  req.Page_size,
 		Offset: req.Page_size * (req.Page_id - 1),
 	}
+	ctx := context.Background()
+	res, err := redisClient.Get(ctx, url).Result()
 
-	ticket, err := server.store.ListCategories(c, arg)
+	if err == nil {
+		log.Info().Str("Source", "cache").Msg("Cached resource")
+		resStruct := []db.Category{}
+		_ = json.Unmarshal([]byte(res), &resStruct)
+		c.JSON(http.StatusOK, resStruct)
+		return
+	}
+	categories, err := server.store.ListCategories(c, arg)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	c.JSON(http.StatusOK, ticket)
+
+	// put it to the cache
+	content, err := json.Marshal(categories)
+	err = redisClient.Set(c, url, content, time.Minute*5).Err()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, categories)
 
 }
