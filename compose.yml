@@ -1,5 +1,6 @@
 services:
   api:
+    restart: always
     build:
       context: .
       dockerfile: Dockerfile
@@ -21,10 +22,16 @@ services:
     entrypoint: [ "/app/start.sh" ]
     command: [ "/app/main" ]
   redis:
+<<<<<<< HEAD
     image: redis:latest
+=======
+    restart: always
+    image: redis:7-alpine
+>>>>>>> 56bc871b934b7a05c5973f286adf734e156e2265
     networks:
       - app
   postgres:
+    restart: always
     image: postgres:alpine3.18
     environment:
       - POSTGRES_USER=nader
@@ -41,6 +48,7 @@ services:
       - app
 
   grafana:
+    restart: always
     image: grafana/grafana:latest
     ports:
       - 3000:3000
@@ -58,6 +66,7 @@ services:
       - app
 
   loki:
+    restart: always
     image: grafana/loki:latest
     ports:
       - 3100:3100
@@ -66,8 +75,9 @@ services:
       - app
 
   promtail:
+    restart: always
     image: grafana/promtail:latest
-    container_name: promtail
+    container_name: ticketing_promtail
     volumes:
       - ./config/promtail.yaml:/etc/promtail/docker-config.yaml
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
@@ -78,6 +88,7 @@ services:
     networks:
       - app
   prometheus:
+    restart: always
     image: prom/prometheus
     volumes:
       - "./config/prometheus.yml:/etc/prometheus/prometheus.yml"
