@@ -2,6 +2,7 @@ package cache
 
 import (
 	"github.com/redis/go-redis/v9"
+	"github.com/spf13/viper"
 )
 
 type CacheClient struct {
@@ -15,6 +16,7 @@ func NewCacheClient() *CacheClient {
 }
 
 func NewRedisClient() *redis.Client {
-	client := redis.NewClient(&redis.Options{Addr: ":6379"})
+	Addr := viper.GetString("REDDIS_ADDR")
+	client := redis.NewClient(&redis.Options{Addr: Addr})
 	return client
 }
