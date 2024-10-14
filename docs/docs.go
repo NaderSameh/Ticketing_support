@@ -167,6 +167,20 @@ const docTemplate = `{
                         "description": "Filter Assigned engineer",
                         "name": "assigned_to",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Is admin",
+                        "name": "is_admin",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User sending the request",
+                        "name": "requester",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -255,6 +269,20 @@ const docTemplate = `{
                         "description": "Ticket ID",
                         "name": "ticket_id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Is admin",
+                        "name": "is_admin",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User sending the request",
+                        "name": "requester",
+                        "in": "query",
                         "required": true
                     }
                 ],

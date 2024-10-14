@@ -55,9 +55,9 @@ func (server *Server) setupRouter() {
 	router.GET("/categories", server.listCategories) // Create Category
 	//Swagger
 	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json") // The url pointing to API definition
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+	router.GET("/tickets/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
-	authRoutes := router.Group("/").Use(authMiddleware())
+	authRoutes := router.Group("/")
 	authRoutes.GET("/tickets", server.listTicket)              // Get list of tickets
 	authRoutes.GET("/tickets/:ticket_id", server.getTicket)    // Get single ticket
 	authRoutes.POST("/categories", server.createCategory)      // Create Category

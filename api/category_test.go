@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -166,7 +165,6 @@ func TestCreateCategory(t *testing.T) {
 	testCases := []struct {
 		name          string
 		body          gin.H
-		setupAuth     func(t *testing.T, request *http.Request)
 		buildstuds    func(store *mockdb.MockStore)
 		checkResponse func(recorder *httptest.ResponseRecorder)
 	}{
@@ -175,9 +173,6 @@ func TestCreateCategory(t *testing.T) {
 			body: gin.H{
 				"name": categoryName,
 			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-			},
 			buildstuds: func(store *mockdb.MockStore) {
 				store.EXPECT().CreateCategory(gomock.Any(), gomock.Eq(categoryName)).Times(1).Return(db.Category{CategoryID: 1, Name: categoryName}, nil)
 			},
@@ -185,56 +180,6 @@ func TestCreateCategory(t *testing.T) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
 		},
-
-		{
-			name: "Invalid token",
-			body: gin.H{
-				"name": categoryName,
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenInvalid, authorizationTypeBearer)
-			},
-			buildstuds: func(store *mockdb.MockStore) {
-				store.EXPECT().CreateCategory(gomock.Any(), gomock.Eq(categoryName)).Times(0).Return(db.Category{CategoryID: 1, Name: categoryName}, nil)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.True(t, strings.Contains(recorder.Body.String(), "invalid"))
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
-			},
-		},
-		{
-			name: "Unauthorized no permission",
-			body: gin.H{
-				"name": categoryName,
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenNoPermission, authorizationTypeBearer)
-			},
-			buildstuds: func(store *mockdb.MockStore) {
-				store.EXPECT().CreateCategory(gomock.Any(), gomock.Eq(categoryName)).Times(0).Return(db.Category{CategoryID: 1, Name: categoryName}, nil)
-			},
-			checkResponse: func(recoder *httptest.ResponseRecorder) {
-				require.True(t, strings.Contains(recoder.Body.String(), "Only admins post new categories"))
-				require.Equal(t, http.StatusUnauthorized, recoder.Code)
-			},
-		},
-		{
-			name: "Unauthorized expired token",
-			body: gin.H{
-				"name": categoryName,
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenExpiration, authorizationTypeBearer)
-			},
-			buildstuds: func(store *mockdb.MockStore) {
-				store.EXPECT().CreateCategory(gomock.Any(), gomock.Eq(categoryName)).Times(0).Return(db.Category{CategoryID: 1, Name: categoryName}, nil)
-			},
-			checkResponse: func(recoder *httptest.ResponseRecorder) {
-				require.True(t, strings.Contains(recoder.Body.String(), "token is expired"))
-				require.Equal(t, http.StatusUnauthorized, recoder.Code)
-			},
-		},
-
 		{
 			name: "Invalid param",
 			body: gin.H{
@@ -242,9 +187,6 @@ func TestCreateCategory(t *testing.T) {
 			},
 			buildstuds: func(store *mockdb.MockStore) {
 				store.EXPECT().CreateCategory(gomock.Any(), gomock.Eq(categoryName)).Times(0)
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
@@ -259,9 +201,6 @@ func TestCreateCategory(t *testing.T) {
 					CreateCategory(gomock.Any(), gomock.Eq(categoryName)).
 					Times(1).
 					Return(db.Category{CategoryID: 1, Name: categoryName}, sql.ErrConnDone)
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
@@ -289,7 +228,6 @@ func TestCreateCategory(t *testing.T) {
 			request, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
 			require.NoError(t, err)
 			recorder := httptest.NewRecorder()
-			tc.setupAuth(t, request)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
