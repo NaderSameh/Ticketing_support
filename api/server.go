@@ -46,22 +46,20 @@ func (server *Server) setupRouter() {
 	//tickets
 	router.POST("/tickets", server.createTicket)              // Create new ticket
 	router.DELETE("/tickets/:ticket_id", server.deleteTicket) // Delete ticket with its comments
+	router.GET("/tickets", server.listTicket)                 // Get list of tickets
+	router.GET("/tickets/:ticket_id", server.getTicket)       // Get single ticket
+	router.PUT("/tickets/:ticket_id", server.updateTicket)    //Assign ticket or update its status
 	//comments
 	router.DELETE("/tickets/:ticket_id/comments/:comment_id", server.deleteComment) // Delete a comment
 	router.PUT("/tickets/:ticket_id/comments/:comment_id", server.updateComment)    //Edit comment text
 	router.GET("/tickets/:ticket_id/comments", server.listComments)                 // Get comments for a ticket
 	router.POST("/tickets/:ticket_id/comments", server.createComment)               //Add comment to a ticket
 	//caterogries
-	router.GET("/categories", server.listCategories) // Create Category
+	router.GET("tickets/categories", server.listCategories)
+	router.POST("tickets/categories", server.createCategory) // Create Category
 	//Swagger
-	url := ginSwagger.URL("http://localhost:8080/swagger/doc.json") // The url pointing to API definition
-	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
-
-	authRoutes := router.Group("/").Use(authMiddleware())
-	authRoutes.GET("/tickets", server.listTicket)              // Get list of tickets
-	authRoutes.GET("/tickets/:ticket_id", server.getTicket)    // Get single ticket
-	authRoutes.POST("/categories", server.createCategory)      // Create Category
-	authRoutes.PUT("/tickets/:ticket_id", server.updateTicket) //Assign ticket or update its status
+	url := ginSwagger.URL("http://localhost:8080/tickets/swagger/doc.json") // The url pointing to API definition
+	router.GET("/tickets/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 
 	server.router = router
 

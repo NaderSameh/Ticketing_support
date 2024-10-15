@@ -229,6 +229,16 @@ paths:
         in: query
         name: assigned_to
         type: string
+      - description: Is admin
+        in: query
+        name: is_admin
+        required: true
+        type: integer
+      - description: User sending the request
+        in: query
+        name: requester
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -313,6 +323,16 @@ paths:
       - description: Ticket ID
         in: path
         name: ticket_id
+        required: true
+        type: string
+      - description: Is admin
+        in: query
+        name: is_admin
+        required: true
+        type: integer
+      - description: User sending the request
+        in: query
+        name: requester
         required: true
         type: string
       produces:
