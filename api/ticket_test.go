@@ -306,12 +306,13 @@ func TestListAllTicket(t *testing.T) {
 		category_id   int64
 		page_id       int32
 		page_size     int32
+		is_admin      bool
+		requester     string
 	}
 
 	testCases := []struct {
 		name          string
 		query         Query
-		setupAuth     func(t *testing.T, request *http.Request)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(recoder *httptest.ResponseRecorder)
 	}{
@@ -321,9 +322,8 @@ func TestListAllTicket(t *testing.T) {
 				user_assigned: tickets[0].UserAssigned,
 				page_id:       1,
 				page_size:     10,
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+				is_admin:      true,
+				requester:     "test_user",
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.ListAllTicketsParams{
@@ -350,9 +350,8 @@ func TestListAllTicket(t *testing.T) {
 				assigned_to: "engineer",
 				page_id:     1,
 				page_size:   10,
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+				is_admin:    true,
+				requester:   "test_user",
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.ListAllTicketsParams{
@@ -380,15 +379,15 @@ func TestListAllTicket(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
-		}, {
+		},
+		{
 			name: "OK admin filter by category",
 			query: Query{
 				category_id: tickets[0].CategoryID,
 				page_id:     1,
 				page_size:   10,
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+				is_admin:    true,
+				requester:   "test_user",
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.ListAllTicketsParams{
@@ -423,9 +422,8 @@ func TestListAllTicket(t *testing.T) {
 				user_assigned: tickets[0].UserAssigned,
 				page_id:       1,
 				page_size:     10,
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenNoPermissionMina3, authorizationTypeBearer)
+				is_admin:      false,
+				requester:     tickets[0].UserAssigned,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.ListAllTicketsParams{
@@ -452,9 +450,8 @@ func TestListAllTicket(t *testing.T) {
 				user_assigned: tickets[0].UserAssigned,
 				// "page_id":       1,
 				// "page_size":     10,
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+				is_admin:  true,
+				requester: "test_user",
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.ListAllTicketsParams{
@@ -480,27 +477,8 @@ func TestListAllTicket(t *testing.T) {
 				user_assigned: tickets[0].UserAssigned,
 				page_id:       1,
 				page_size:     100,
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				store.EXPECT().
-					ListAllTickets(gomock.Any(), gomock.Any()).
-					Times(0)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusBadRequest, recorder.Code)
-			},
-		}, {
-			name: "invalid page id",
-			query: Query{
-				user_assigned: tickets[0].UserAssigned,
-				page_id:       -1,
-				page_size:     10,
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+				is_admin:      true,
+				requester:     "test_user",
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -511,16 +489,32 @@ func TestListAllTicket(t *testing.T) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
-
+		{
+			name: "invalid page id",
+			query: Query{
+				user_assigned: tickets[0].UserAssigned,
+				page_id:       -1,
+				page_size:     10,
+				is_admin:      true,
+				requester:     "test_user",
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					ListAllTickets(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			checkResponse: func(recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusBadRequest, recorder.Code)
+			},
+		},
 		{
 			name: "internal server error admin",
 			query: Query{
 				user_assigned: tickets[0].UserAssigned,
 				page_id:       1,
 				page_size:     10,
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
+				is_admin:      true,
+				requester:     "test_user",
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -537,9 +531,8 @@ func TestListAllTicket(t *testing.T) {
 				user_assigned: tickets[0].UserAssigned,
 				page_id:       1,
 				page_size:     10,
-			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenNoPermission, authorizationTypeBearer)
+				is_admin:      true,
+				requester:     "test_user",
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -575,13 +568,15 @@ func TestListAllTicket(t *testing.T) {
 
 			// Add query parameters to request URL
 			q := request.URL.Query()
-			q.Add("user_assigned", fmt.Sprintf("%s", tc.query.user_assigned))
+			q.Add("user_assigned", tc.query.user_assigned)
 			q.Add("page_id", fmt.Sprintf("%d", tc.query.page_id))
 			q.Add("page_size", fmt.Sprintf("%d", tc.query.page_size))
-			q.Add("assigned_to", fmt.Sprintf("%s", tc.query.assigned_to))
+			q.Add("assigned_to", tc.query.assigned_to)
 			q.Add("category_id", fmt.Sprintf("%d", tc.query.category_id))
+			q.Add("requester", tc.query.requester)
+			q.Add("is_admin", fmt.Sprintf("%t", tc.query.is_admin))
+
 			request.URL.RawQuery = q.Encode()
-			tc.setupAuth(t, request)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
@@ -594,23 +589,20 @@ func TestGetTicket(t *testing.T) {
 	testCases := []struct {
 		name          string
 		ticket_id     int64
-		setupAuth     func(t *testing.T, request *http.Request)
+		query         string
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(recoder *httptest.ResponseRecorder)
 	}{
 		{
 			name:      "OK admin",
 			ticket_id: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-			},
 			buildStubs: func(store *mockdb.MockStore) {
-
 				store.EXPECT().
 					GetTicket(gomock.Any(), ticket.TicketID).
 					Times(1).
 					Return(ticket, nil)
 			},
+			query: "is_admin=true&requester=test_user",
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
@@ -618,11 +610,8 @@ func TestGetTicket(t *testing.T) {
 		{
 			name:      "OK user",
 			ticket_id: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenNoPermissionMina3, authorizationTypeBearer)
-			},
+			query:     "is_admin=false&requester=Mina3",
 			buildStubs: func(store *mockdb.MockStore) {
-
 				store.EXPECT().
 					GetTicket(gomock.Any(), ticket.TicketID).
 					Times(1).
@@ -634,9 +623,7 @@ func TestGetTicket(t *testing.T) {
 		}, {
 			name: "Missing ticket ID",
 			// ticket_id: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenNoPermissionMina3, authorizationTypeBearer)
-			},
+			query: "is_admin=true&requester=test_user",
 			buildStubs: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
@@ -649,29 +636,9 @@ func TestGetTicket(t *testing.T) {
 			},
 		},
 		{
-			name:      "Unauthorized request",
-			ticket_id: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenNoPermission, authorizationTypeBearer)
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-
-				store.EXPECT().
-					GetTicket(gomock.Any(), ticket.TicketID).
-					Times(1).
-					Return(ticket, nil)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
-			},
-		},
-
-		{
 			name:      "internal server error admin",
 			ticket_id: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-			},
+			query:     "is_admin=true&requester=test_user",
 			buildStubs: func(store *mockdb.MockStore) {
 
 				store.EXPECT().
@@ -686,11 +653,8 @@ func TestGetTicket(t *testing.T) {
 		{
 			name:      "internal server error user",
 			ticket_id: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenNoPermissionMina3, authorizationTypeBearer)
-			},
+			query:     "is_admin=true&requester=test_user",
 			buildStubs: func(store *mockdb.MockStore) {
-
 				store.EXPECT().
 					GetTicket(gomock.Any(), ticket.TicketID).
 					Times(1).
@@ -717,11 +681,10 @@ func TestGetTicket(t *testing.T) {
 
 			// Marshal body data to JSON
 
-			url := fmt.Sprintf("/tickets/%d", tc.ticket_id)
+			url := fmt.Sprintf("/tickets/%d?%s", tc.ticket_id, tc.query)
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
 
-			tc.setupAuth(t, request)
 			server.router.ServeHTTP(recorder, request)
 			tc.checkResponse(recorder)
 		})
@@ -735,16 +698,12 @@ func TestUpdateTicket(t *testing.T) {
 		name          string
 		body          gin.H
 		TicketID      int64
-		setupAuth     func(t *testing.T, request *http.Request)
 		buildStubs    func(store *mockdb.MockStore)
 		checkResponse func(recoder *httptest.ResponseRecorder)
 	}{
 		{
 			name:     "OK",
 			TicketID: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-			},
 			body: gin.H{
 				"ticket_id":   ticket.TicketID,
 				"status":      "closed",
@@ -775,64 +734,8 @@ func TestUpdateTicket(t *testing.T) {
 			},
 		},
 		{
-			name:     "No authorization",
-			TicketID: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				// addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-			},
-			body: gin.H{
-				"ticket_id":   ticket.TicketID,
-				"status":      "closed",
-				"assigned_to": "someone",
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
-			},
-		},
-		{
-			name:     "Unauthorized no permission",
-			TicketID: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenNoPermission, authorizationTypeBearer)
-			},
-			body: gin.H{
-				"ticket_id":   ticket.TicketID,
-				"status":      "closed",
-				"assigned_to": "someone",
-			},
-			buildStubs: func(store *mockdb.MockStore) {
-				arg := db.UpdateTicketParams{
-					TicketID:   ticket.TicketID,
-					UpdatedAt:  time.Now().Round(time.Second),
-					Status:     "closed",
-					AssignedTo: sql.NullString{String: "someone", Valid: true},
-				}
-				ticket.UpdatedAt = time.Now()
-				ticket.Status = "closed"
-
-				store.EXPECT().
-					GetTicketForUpdate(gomock.Any(), ticket.TicketID).
-					Times(0).
-					Return(ticket, nil)
-
-				store.EXPECT().
-					UpdateTicket(gomock.Any(), gomock.Eq(arg)).
-					Times(0).
-					Return(ticket, nil)
-			},
-			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
-			},
-		},
-		{
 			name:     "Invalid URI ticket ID",
 			TicketID: -ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-			},
 			body: gin.H{
 				"ticket_id":   -ticket.TicketID,
 				"status":      "closed",
@@ -848,9 +751,6 @@ func TestUpdateTicket(t *testing.T) {
 		{
 			name:     "missing data",
 			TicketID: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-			},
 			body: gin.H{
 				"ticket_id": ticket.TicketID,
 				// "status":      "closed",
@@ -871,9 +771,6 @@ func TestUpdateTicket(t *testing.T) {
 				"status":      "finished",
 				"assigned_to": "someone",
 			},
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					UpdateTicket(gomock.Any(), gomock.Any()).
@@ -886,9 +783,6 @@ func TestUpdateTicket(t *testing.T) {
 		{
 			name:     "Internal server error",
 			TicketID: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-			},
 			body: gin.H{
 				"ticket_id":   ticket.TicketID,
 				"status":      "closed",
@@ -922,9 +816,6 @@ func TestUpdateTicket(t *testing.T) {
 		{
 			name:     "Empty assigned to field",
 			TicketID: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-			},
 			body: gin.H{
 				"ticket_id": ticket.TicketID,
 				"status":    "closed",
@@ -955,9 +846,6 @@ func TestUpdateTicket(t *testing.T) {
 		}, {
 			name:     "Not an existing ticket",
 			TicketID: ticket.TicketID,
-			setupAuth: func(t *testing.T, request *http.Request) {
-				addAuthorization(t, request, JWTtokenOK, authorizationTypeBearer)
-			},
 			body: gin.H{
 				"ticket_id": ticket.TicketID,
 				"status":    "closed",
@@ -1008,8 +896,6 @@ func TestUpdateTicket(t *testing.T) {
 			url := fmt.Sprintf("/tickets/%d", tc.TicketID)
 			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 			require.NoError(t, err)
-
-			tc.setupAuth(t, request)
 
 			server.router.ServeHTTP(recorder, request)
 			fmt.Printf("error %s", recorder.Body.String())

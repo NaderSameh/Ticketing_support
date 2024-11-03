@@ -11,9 +11,8 @@ import (
 	"github.com/hibiken/asynq"
 	"github.com/naderSameh/ticketing_support/cache"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
-	"github.com/naderSameh/ticketing_support/token"
 	worker "github.com/naderSameh/ticketing_support/worker"
-	"golang.org/x/exp/slices"
+	"github.com/rs/zerolog/log"
 )
 
 type createTicketRequest struct {
@@ -124,6 +123,8 @@ type listTicketRequest struct {
 	Category_ID  int64  `form:"category_id"`
 	PageID       int32  `form:"page_id" binding:"required,min=1"`
 	PageSize     int32  `form:"page_size" binding:"required,min=5,max=10"`
+	Is_Admin     *bool  `form:"is_admin" binding:"required"`
+	User         string `form:"requester" binding:"required"`
 }
 
 // ListTickets godoc
@@ -141,6 +142,8 @@ type listTicketRequest struct {
 //	@Param			page_size		query		int		true	"Page Size"
 //	@Param			category_id		query		int		false	"Filter Category ID"
 //	@Param			assigned_to		query		string	false	"Filter Assigned engineer"
+//	@Param			is_admin		query		int		true	"Is admin"
+//	@Param			requester		query		string	true	"User sending the request"
 //
 //	@Success		200				{array}		db.Ticket
 //	@Failure		400				{object}	error
@@ -155,9 +158,7 @@ func (server *Server) listTicket(c *gin.Context) {
 		return
 	}
 
-	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
-	if slices.Contains(authPayload.Permissions, "tickets.GET") {
-
+	if *req.Is_Admin {
 		var userAssignedBool, assignedToBool, categoryIDBool bool
 		if req.UserAssigned != "" {
 			userAssignedBool = true
@@ -190,7 +191,7 @@ func (server *Server) listTicket(c *gin.Context) {
 		url := c.FullPath()
 		redisClient := cache.NewCacheClient().RedisClient
 		// put it to the cache
-		content, err := json.Marshal(tickets)
+		content, _ := json.Marshal(tickets)
 		err = redisClient.Set(c, url, content, time.Minute*5).Err()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -201,7 +202,7 @@ func (server *Server) listTicket(c *gin.Context) {
 	}
 	arg := db.ListAllTicketsParams{
 		UserAssigned: sql.NullString{
-			String: authPayload.StandardClaims.Subject,
+			String: req.User,
 			Valid:  true,
 		},
 		Limit:  req.PageSize,
@@ -216,14 +217,13 @@ func (server *Server) listTicket(c *gin.Context) {
 	url := c.FullPath()
 	redisClient := cache.NewCacheClient().RedisClient
 	// put it to the cache
-	content, err := json.Marshal(tickets)
+	content, _ := json.Marshal(tickets)
 	err = redisClient.Set(c, url, content, time.Minute*5).Err()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 	c.JSON(http.StatusOK, tickets)
-
 }
 
 type updateTicketRequestJSON struct {
@@ -268,13 +268,6 @@ func (server *Server) updateTicket(c *gin.Context) {
 		return
 	}
 
-	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
-	if !slices.Contains(authPayload.Permissions, "tickets.PUT") {
-		err := errors.New("Only admins update tickets")
-		c.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
-
 	arg := db.UpdateTicketParams{
 		TicketID:  reqURI.TicketID,
 		UpdatedAt: time.Now().Round(time.Second),
@@ -301,6 +294,11 @@ func (server *Server) updateTicket(c *gin.Context) {
 
 }
 
+type getTicketRequest struct {
+	Is_Admin *bool  `form:"is_admin" binding:"required"`
+	User     string `form:"requester" binding:"required"`
+}
+
 type getTicketRequestURI struct {
 	TicketID int64 `uri:"ticket_id" binding:"required,min=1"`
 }
@@ -314,6 +312,8 @@ type getTicketRequestURI struct {
 //
 //	@Produce		json
 //	@Param			ticket_id	path		string	true	"Ticket ID"
+//	@Param			is_admin		query		int		true	"Is admin"
+//	@Param			requester		query		string	true	"User sending the request"
 //
 //	@Success		200			{array}		db.Ticket
 //	@Failure		401			{object}	error
@@ -327,10 +327,13 @@ func (server *Server) getTicket(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-
-	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
-	if slices.Contains(authPayload.Permissions, "tickets.GET") {
-
+	var req getTicketRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	log.Info().Bool("is_admin", *req.Is_Admin)
+	if *req.Is_Admin {
 		ticket, err := server.store.GetTicket(c, reqURI.TicketID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -345,7 +348,7 @@ func (server *Server) getTicket(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	if ticket.UserAssigned != authPayload.StandardClaims.Subject {
+	if ticket.UserAssigned != req.User {
 		c.JSON(http.StatusUnauthorized, errorResponse(errors.New("user doesn't own that ticket")))
 		return
 	}

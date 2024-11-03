@@ -3,16 +3,13 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/naderSameh/ticketing_support/cache"
 	db "github.com/naderSameh/ticketing_support/db/sqlc"
-	"github.com/naderSameh/ticketing_support/token"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/exp/slices"
 )
 
 type createCategorytRequest struct {
@@ -38,12 +35,6 @@ func (server *Server) createCategory(c *gin.Context) {
 	var req createCategorytRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
-	if !slices.Contains(authPayload.Permissions, "tickets.POST") {
-		err := errors.New("Only admins post new categories")
-		c.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 	category, err := server.store.CreateCategory(c, req.Name)
@@ -104,7 +95,7 @@ func (server *Server) listCategories(c *gin.Context) {
 	}
 
 	// put it to the cache
-	content, err := json.Marshal(categories)
+	content, _ := json.Marshal(categories)
 	err = redisClient.Set(c, url, content, time.Minute*5).Err()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, errorResponse(err))
