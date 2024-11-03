@@ -86,7 +86,8 @@ func TestListCategories(t *testing.T) {
 			checkResponse: func(recoder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recoder.Code)
 			},
-		}, {
+		},
+		{
 			name: "internal server error",
 			query: Query{
 				page_id:   1,
@@ -107,7 +108,8 @@ func TestListCategories(t *testing.T) {
 			checkResponse: func(recoder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recoder.Code)
 			},
-		}, {
+		},
+		{
 			name: "invalid page id",
 			query: Query{
 				page_id:   -1,
@@ -143,7 +145,7 @@ func TestListCategories(t *testing.T) {
 			server := newTestServer(t, store, nil)
 			recorder := httptest.NewRecorder()
 
-			url := "/categories"
+			url := "/tickets/categories"
 
 			request, err := http.NewRequest(http.MethodGet, url, nil)
 			require.NoError(t, err)
@@ -220,7 +222,7 @@ func TestCreateCategory(t *testing.T) {
 
 			server := newTestServer(t, store, nil)
 
-			url := "/categories"
+			url := "/tickets/categories"
 
 			data, err := json.Marshal(tc.body)
 			require.NoError(t, err)

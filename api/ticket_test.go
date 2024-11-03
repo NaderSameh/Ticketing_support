@@ -379,7 +379,8 @@ func TestListAllTicket(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
 			},
-		}, {
+		},
+		{
 			name: "OK admin filter by category",
 			query: Query{
 				category_id: tickets[0].CategoryID,
@@ -422,7 +423,7 @@ func TestListAllTicket(t *testing.T) {
 				page_id:       1,
 				page_size:     10,
 				is_admin:      false,
-				requester:     "Mina3",
+				requester:     tickets[0].UserAssigned,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				arg := db.ListAllTicketsParams{
@@ -487,7 +488,8 @@ func TestListAllTicket(t *testing.T) {
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
-		}, {
+		},
+		{
 			name: "invalid page id",
 			query: Query{
 				user_assigned: tickets[0].UserAssigned,
@@ -505,7 +507,6 @@ func TestListAllTicket(t *testing.T) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
 			},
 		},
-
 		{
 			name: "internal server error admin",
 			query: Query{

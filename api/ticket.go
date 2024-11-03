@@ -123,7 +123,7 @@ type listTicketRequest struct {
 	Category_ID  int64  `form:"category_id"`
 	PageID       int32  `form:"page_id" binding:"required,min=1"`
 	PageSize     int32  `form:"page_size" binding:"required,min=5,max=10"`
-	Is_Admin     bool   `form:"is_admin" binding:"required"`
+	Is_Admin     *bool  `form:"is_admin" binding:"required"`
 	User         string `form:"requester" binding:"required"`
 }
 
@@ -158,7 +158,7 @@ func (server *Server) listTicket(c *gin.Context) {
 		return
 	}
 
-	if req.Is_Admin {
+	if *req.Is_Admin {
 		var userAssignedBool, assignedToBool, categoryIDBool bool
 		if req.UserAssigned != "" {
 			userAssignedBool = true
@@ -295,7 +295,7 @@ func (server *Server) updateTicket(c *gin.Context) {
 }
 
 type getTicketRequest struct {
-	Is_Admin bool   `form:"is_admin" binding:"required"`
+	Is_Admin *bool  `form:"is_admin" binding:"required"`
 	User     string `form:"requester" binding:"required"`
 }
 
@@ -332,8 +332,8 @@ func (server *Server) getTicket(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	log.Info().Bool("is_admin", req.Is_Admin)
-	if req.Is_Admin {
+	log.Info().Bool("is_admin", *req.Is_Admin)
+	if *req.Is_Admin {
 		ticket, err := server.store.GetTicket(c, reqURI.TicketID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, errorResponse(err))
